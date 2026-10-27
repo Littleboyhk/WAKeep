@@ -368,12 +368,15 @@ app.get('/api/session/status', requirePinAuth, async (req: AuthenticatedRequest,
   const targetSessionId = req.sessionId || SESSION_ID;
   const manager = await sessionManager.getOrLoadSession(targetSessionId);
   const telemetry = manager.getTelemetry();
+  const isAccountActive = telemetry.status === 'connected' && Boolean(telemetry.user);
+
   res.json({
     ...telemetry,
     sessionId: targetSessionId,
     qrDataUrl: manager.getQrCode(),
     pairingCode: manager.getLastPairingCode(),
-    vaultConnected: Boolean(SUPABASE_URL && SUPABASE_KEY)
+    vaultConnected: Boolean(SUPABASE_URL && SUPABASE_KEY),
+    isAccountActive
   });
 });
 
@@ -406,9 +409,21 @@ app.post('/api/session/ping', requirePinAuth, async (req: AuthenticatedRequest, 
     const targetSessionId = req.sessionId || SESSION_ID;
     const manager = await sessionManager.getOrLoadSession(targetSessionId);
     const status = manager.getStatus();
+    const user = manager.getUserProfile();
+
+    if (status !== 'connected' || !user) {
+      res.status(400).json({
+        success: false,
+        status,
+        error: 'WhatsApp companion is NOT active or linked yet. Please scan the QR code to connect your account first.'
+      });
+      return;
+    }
+
     res.json({
       success: true,
       status,
+      user,
       message: '24/7 Keep-alive heartbeat verified successfully.'
     });
   } catch (err: any) {

@@ -270,12 +270,16 @@ export class WhatsAppClientManager {
    */
   public async requestPairingCode(phoneNumber: string): Promise<string> {
     if (!this.sock) {
-      throw new Error('WhatsApp client is not initialized. Please wait for initial setup.');
+      throw new Error('WhatsApp companion engine is initializing. Please wait 3 seconds and try again.');
     }
 
     const cleanNumber = phoneNumber.replace(/\D/g, '');
-    if (!cleanNumber || cleanNumber.length < 8 || cleanNumber.length > 15) {
-      throw new Error('Please enter a valid international phone number with country code (e.g., 14155552671)');
+    if (!cleanNumber || cleanNumber.length < 10 || cleanNumber.length > 15) {
+      throw new Error('Please enter a valid international phone number with country code (e.g., 919876543210 for India, 14155552671 for US). Must be 10 to 15 digits.');
+    }
+
+    if (/^(\d)\1+$/.test(cleanNumber) || cleanNumber === '1234567890' || cleanNumber === '0123456789') {
+      throw new Error('Fake or test phone numbers cannot be verified. Please enter your real WhatsApp mobile number.');
     }
 
     if (this.sock.authState.creds.registered) {
@@ -295,6 +299,10 @@ export class WhatsAppClientManager {
       console.error('[WhatsAppClient] Failed to request pairing code:', pairErr.message);
       this.status = 'waiting_qr';
       this.broadcastStatus();
+      const msg = (pairErr.message || '').toLowerCase();
+      if (msg.includes('item-not-found') || msg.includes('bad-request') || msg.includes('400')) {
+        throw new Error('WhatsApp server could not generate a code for this number. Please verify that this mobile number is registered on WhatsApp and includes your country code.');
+      }
       throw pairErr;
     }
   }

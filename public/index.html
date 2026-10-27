@@ -427,8 +427,8 @@
           <div>
             <div class="flex flex-wrap items-center gap-2">
               <span id="statusLabel" class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                Connected 24/7
+                <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+                Checking Connection...
               </span>
               <span id="activeSessionBadge" class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700">
                 Session: main_session
@@ -482,8 +482,21 @@
 
       </div>
 
-      <!-- ONE-TIME AUTH SECTION (Only visible if waiting for QR or pairing) -->
-      <div id="pairingSection" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-xl">
+      <!-- ONE-TIME AUTH SECTION (Visible while waiting for QR or pairing) -->
+      <div id="pairingSection" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-xl">
+        <!-- Account Status Notice -->
+        <div class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3.5 text-amber-800 dark:text-amber-300">
+          <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <div class="text-xs space-y-1">
+            <div class="font-bold text-slate-900 dark:text-white text-sm">WhatsApp Account Not Linked Yet</div>
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+              Your server vault session is ready, but your WhatsApp account is not active or connected yet. The 24/7 keep-alive engine will only engage once you scan the QR code or link your official WhatsApp companion device below.
+            </p>
+          </div>
+        </div>
+
         <div class="text-center max-w-lg mx-auto mb-8">
           <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2.5">
             <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
@@ -540,14 +553,14 @@
         <div id="codeTabContent" class="hidden max-w-md mx-auto space-y-5">
           <div>
             <label for="phoneNumberInput" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Enter Phone Number (with Country Code)
+              Enter WhatsApp Phone Number (with Country Code)
             </label>
             <div class="flex gap-2">
               <input
                 type="tel"
                 id="phoneNumberInput"
                 name="phoneNumberInput"
-                placeholder="14155552671"
+                placeholder="919876543210"
                 class="flex-1 px-4 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <button
@@ -559,7 +572,10 @@
                 Get Code
               </button>
             </div>
-            <div id="codeError" class="text-xs text-rose-500 mt-2 hidden"></div>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">
+              Enter complete number including country code without spaces or '+' (e.g., <strong>91</strong> for India, <strong>1</strong> for US).
+            </p>
+            <div id="codeError" class="text-xs text-rose-500 mt-2 hidden p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20"></div>
           </div>
 
           <div id="pairingCodeBox" class="hidden p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
@@ -578,7 +594,7 @@
       <!-- ===================================================================== -->
       <!-- FULL-WIDTH 24/7 GATEWAY TELEMETRY & CONTROLS CONSOLE -->
       <!-- ===================================================================== -->
-      <div id="chatConsoleSection" class="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div id="chatConsoleSection" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
         <!-- Left: 24/7 Gateway Telemetry & Privacy Shield (8 Cols on Desktop / 12 on Mobile) -->
         <div class="lg:col-span-8 xl:col-span-8 space-y-6">
@@ -1310,7 +1326,7 @@
         connectSocket();
         await loadStatus();
         updateServerSlots();
-        showNotification('New session active! Please scan QR code to link.');
+        showNotification('Session vault created! Please scan QR code to link your WhatsApp.');
       } catch (err) {
         errEl.textContent = err.message;
         errEl.classList.remove('hidden');
@@ -1402,7 +1418,6 @@
       document.getElementById('heroLockCard').classList.add('hidden');
       document.getElementById('unlockedConsole').classList.remove('hidden');
       document.getElementById('navActionBtn').textContent = 'Live Console';
-      startKeepAlivePulse();
     }
 
     async function lockConsole() {
@@ -1472,45 +1487,74 @@
       const hDot = document.getElementById('headerStatusDot');
       const hText = document.getElementById('headerStatusText');
 
-      if (t.status === 'connected') {
+      const isConnected = t.status === 'connected' && t.user && t.user.phone;
+
+      if (isConnected) {
         dot.className = 'w-3.5 h-3.5 rounded-full bg-emerald-500';
-        label.textContent = 'Connected 24/7';
+        label.textContent = 'WhatsApp Active 24/7';
         pairingSection.classList.add('hidden');
         chatSection.classList.remove('hidden');
 
         if (hDot && hText) {
           hDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-          hText.textContent = 'Connected 24/7';
+          hText.textContent = 'Active 24/7';
         }
 
-        if (t.user && t.user.phone) {
-          phoneBadge.classList.remove('hidden');
-          phoneBadge.textContent = `+${t.user.phone}`;
-        }
+        phoneBadge.classList.remove('hidden');
+        phoneBadge.textContent = `+${t.user.phone}`;
+
+        startKeepAlivePulse();
       } else {
+        // WhatsApp is NOT connected: Telemetry MUST remain hidden, pairing MUST be visible
+        chatSection.classList.add('hidden');
+        pairingSection.classList.remove('hidden');
         phoneBadge.classList.add('hidden');
+
+        if (heartbeatIntervalTimer) {
+          clearInterval(heartbeatIntervalTimer);
+          heartbeatIntervalTimer = null;
+        }
 
         if (t.status === 'waiting_qr') {
           dot.className = 'w-3.5 h-3.5 rounded-full bg-amber-400 animate-pulse';
-          label.textContent = 'Waiting for QR Scan';
-          pairingSection.classList.remove('hidden');
-          chatSection.classList.add('hidden');
+          label.textContent = 'Scan QR Code to Link WhatsApp';
 
           if (hDot && hText) {
             hDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
-            hText.textContent = 'Waiting for QR';
+            hText.textContent = 'Scan QR';
           }
         } else if (t.status === 'pairing') {
           dot.className = 'w-3.5 h-3.5 rounded-full bg-teal-400 animate-pulse';
-          label.textContent = 'Pairing with Phone Code...';
-          pairingSection.classList.remove('hidden');
-          chatSection.classList.add('hidden');
+          label.textContent = 'Confirming Phone Pairing Code...';
+
+          if (hDot && hText) {
+            hDot.className = 'w-2 h-2 rounded-full bg-teal-400 animate-pulse';
+            hText.textContent = 'Pairing Code';
+          }
         } else if (t.status === 'reconnecting') {
           dot.className = 'w-3.5 h-3.5 rounded-full bg-purple-400 animate-pulse';
-          label.textContent = `Reconnecting (${t.reconnectAttempts || 1})...`;
+          label.textContent = `Reconnecting Gateway (${t.reconnectAttempts || 1})...`;
+
+          if (hDot && hText) {
+            hDot.className = 'w-2 h-2 rounded-full bg-purple-400 animate-pulse';
+            hText.textContent = 'Reconnecting';
+          }
+        } else if (t.status === 'logged_out') {
+          dot.className = 'w-3.5 h-3.5 rounded-full bg-rose-500';
+          label.textContent = 'WhatsApp Unlinked (Scan Fresh QR)';
+
+          if (hDot && hText) {
+            hDot.className = 'w-2 h-2 rounded-full bg-rose-500';
+            hText.textContent = 'Unlinked';
+          }
         } else {
-          dot.className = 'w-3.5 h-3.5 rounded-full bg-slate-400';
-          label.textContent = t.status || 'Connecting...';
+          dot.className = 'w-3.5 h-3.5 rounded-full bg-amber-400 animate-pulse';
+          label.textContent = 'Waiting to Link WhatsApp (Not Connected)';
+
+          if (hDot && hText) {
+            hDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+            hText.textContent = 'Not Connected';
+          }
         }
       }
 
@@ -1553,13 +1597,27 @@
     }
 
     async function submitRequestCode() {
-      const phone = document.getElementById('phoneNumberInput').value.trim();
+      const phoneInput = document.getElementById('phoneNumberInput');
+      const rawPhone = phoneInput.value.trim();
       const errEl = document.getElementById('codeError');
       const btn = document.getElementById('requestCodeBtn');
 
       errEl.classList.add('hidden');
-      if (!phone) {
-        errEl.textContent = 'Please enter your phone number with country code.';
+      if (!rawPhone) {
+        errEl.textContent = 'Please enter your phone number with country code (e.g. 919876543210 for India, 14155552671 for US).';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const cleanDigits = rawPhone.replace(/\D/g, '');
+      if (cleanDigits.length < 10 || cleanDigits.length > 15) {
+        errEl.textContent = 'Invalid phone number length. International numbers require 10 to 15 digits including country code (e.g., 919876543210).';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      if (/^(\d)\1+$/.test(cleanDigits) || cleanDigits === '1234567890' || cleanDigits === '0123456789') {
+        errEl.textContent = 'Fake or dummy numbers cannot be verified on WhatsApp. Please enter your genuine registered WhatsApp mobile number.';
         errEl.classList.remove('hidden');
         return;
       }
@@ -1574,13 +1632,13 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`
           },
-          body: JSON.stringify({ phoneNumber: phone })
+          body: JSON.stringify({ phoneNumber: cleanDigits })
         });
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.error || 'Failed to request code');
         showPairingCode(data.code);
-        showNotification('8-Digit Code Generated');
+        showNotification('8-Digit Code Generated. Enter it in WhatsApp to link!');
       } catch (err) {
         errEl.textContent = err.message;
         errEl.classList.remove('hidden');
@@ -1636,9 +1694,10 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Heartbeat verification failed');
-        logGatewayActivity('Manual keep-alive heartbeat verified with cloud gateway', 'Heartbeat', 'emerald');
-        showNotification('✅ Keep-alive heartbeat active and verified!');
+        logGatewayActivity(`Heartbeat ping verified with WhatsApp. Active: +${data.user?.phone || 'Companion'}`, 'Heartbeat', 'emerald');
+        showNotification('✅ Keep-alive heartbeat verified with WhatsApp servers!');
       } catch (err) {
+        showNotification(`⚠️ ${err.message}`);
         alert(err.message);
       } finally {
         if (btn) btn.disabled = false;
