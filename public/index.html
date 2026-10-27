@@ -238,8 +238,31 @@
       <!-- FORM 1: CREATE NEW SESSION (Get Fresh QR) -->
       <div id="createSessionForm" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl shadow-slate-200/50 dark:shadow-black/60 space-y-4 transition">
         <div class="text-left border-b border-slate-100 dark:border-slate-800 pb-3">
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Activate Your Private 24/7 Companion</h3>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Enter a session identifier and private password to get your personal WhatsApp QR code.</p>
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Activate Your Private 24/7 Companion</h3>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Zero Setup
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Enter a session identifier and private password to get your personal WhatsApp QR code.</p>
+        </div>
+
+        <!-- Zero Setup / No 5-Min Ping Banner -->
+        <div class="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/90 dark:border-emerald-800/60 flex items-start gap-3 text-left">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300">100% Automated 24/7 Keep-Alive</span>
+            </div>
+            <p class="text-[11px] text-emerald-700/90 dark:text-emerald-400/90 mt-0.5 leading-snug">
+              You do <strong>not</strong> need to configure any 5-minute pings or cron jobs! Our cloud server keeps your session awake around the clock automatically.
+            </p>
+          </div>
         </div>
 
         <div class="space-y-3">
@@ -666,6 +689,26 @@
         </div>
 
       </div>
+
+      <!-- Zero Setup Comparison Banner -->
+      <div class="mt-8 p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">Zero Technical Setup on This Website</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              The 5-minute keep-alive ping is already fully managed by this cloud server. You do not need cron jobs, databases, or third-party accounts.
+            </p>
+          </div>
+        </div>
+        <button type="button" onclick="scrollToConsole()" class="px-5 py-2.5 rounded-full text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition whitespace-nowrap self-end sm:self-auto">
+          Activate My Session
+        </button>
+      </div>
     </section>
 
     <!-- ======================================================================= -->
@@ -675,6 +718,13 @@
       <h2 class="text-2xl font-bold text-center text-slate-900 dark:text-white mb-10">Frequently Asked Questions</h2>
       
       <div class="space-y-4 text-xs sm:text-sm px-2">
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1.5">Do I need to set up a 5-minute ping or cron-job.org?</h4>
+          <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+            <strong>No, zero setup is required for website users!</strong> When you activate your session on this website (<code class="text-emerald-600 dark:text-emerald-400 font-mono">wakeep.onrender.com</code>), the cloud server automatically runs a continuous 5-minute keep-alive ping that keeps all user sessions awake 24/7. The 5-minute cron ping instructions on GitHub are strictly for developers who fork the repository to self-host their own instance on Render's free tier.
+          </p>
+        </div>
+
         <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
           <h4 class="font-bold text-slate-900 dark:text-white mb-1.5">Does my phone need to stay on the same Wi-Fi?</h4>
           <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -686,6 +736,13 @@
           <h4 class="font-bold text-slate-900 dark:text-white mb-1.5">What happens when Render restarts?</h4>
           <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
             WAKeep reads the encrypted keys from your Supabase vault, decrypts them in memory, and immediately resumes the session. You never need to scan the QR code again.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1.5">Can other visitors see or access my WhatsApp session?</h4>
+          <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+            <strong>No.</strong> Every user session has its own unique name and is protected by your mandatory 8+ character password. Furthermore, session tokens in the database are encrypted using AES-256-GCM, and real-time WebSocket events are strictly scoped so other users cannot receive your QR code, connection events, or messages.
           </p>
         </div>
       </div>

@@ -18,11 +18,11 @@
 ## 📖 Table of Contents
 - [Why WAKeep Exists (The Problem Solved)](#-why-wakeep-exists-the-problem-solved)
 - [How It Works in Simple Terms](#-how-it-works-in-simple-terms)
-- [⚡ Quick Start: Use Without Coding (For Non-Tech Users)](#-quick-start-use-without-coding-for-non-tech-users)
+- [⚡ Quick Start: Use Without Coding (Zero Setup Required)](#-quick-start-use-without-coding-zero-setup-required)
 - [🛠️ Self-Hosting Guide: Build Your Own Private Instance](#-self-hosting-guide-build-your-own-private-instance)
   - [Step 1: Set Up Free Database (Supabase)](#step-1-set-up-free-database-supabase)
   - [Step 2: Deploy to Free Cloud (Render)](#step-2-deploy-to-free-cloud-render)
-  - [Step 3: Keep it Awake 24/7 (Cron-Job.org)](#step-3-keep-it-awake-247-cron-joborg)
+  - [Step 3: Keep it Awake 24/7 (Cron-Job.org — Self-Hosters Only)](#step-3-keep-it-awake-247-cron-joborg--self-hosters-only)
 - [🔒 Privacy & Indian Legal Compliance](#-privacy--indian-legal-compliance)
 - [❓ Frequently Asked Questions (FAQ)](#-frequently-asked-questions-faq)
 - [📡 API Reference (For Developers)](#-api-reference-for-developers)
@@ -65,7 +65,7 @@ Every day, millions of students, professionals, business owners, and shopkeepers
   - Stores encrypted session keys
   - mathematical zero-knowledge storage
         |
-        ^ (3) Free Ping Every 5 Minutes
+        ^ (3) Free Ping Every 5 Minutes (Automated on Live Host)
 [ Cron-Job.org / Uptime Monitor ]
   - Prevents cloud free-tier from sleeping
 ```
@@ -74,7 +74,18 @@ When you link WAKeep, WhatsApp registers it as an authorized **Desktop Companion
 
 ---
 
-## 🌐 Multi-Session Hub (Activate Your Personal 24/7 Companion)
+## ⚡ Quick Start: Use Without Coding (Zero Setup Required)
+
+> [!IMPORTANT]
+> ### 🚀 Zero Technical Setup for Website Users
+> If you are using our live public website **[https://wakeep.onrender.com](https://wakeep.onrender.com)**:
+> - ❌ You **DO NOT** need to set up any 5-minute ping, cron job, or external monitor.
+> - ❌ You **DO NOT** need a Supabase, Render, or cron-job.org account.
+> - ✅ **24/7 Keep-Alive is 100% Automated:** The server host automatically runs a continuous 5-minute keep-alive ping that keeps the cloud container and all active user sessions awake around the clock!
+>
+> Simply enter your session name, create a password (minimum 8 characters), and scan your QR code once.
+>
+> *(The 5-minute ping on cron-job.org described below is **strictly and exclusively** for developers who self-host on their own Render free tier).*
 
 WAKeep features an **Isolated Multi-Session Architecture**:
 
@@ -199,9 +210,14 @@ EXECUTE FUNCTION prune_old_wa_messages();
 
 ---
 
-### Step 3: Keep it Awake 24/7 (Cron-Job.org)
+### Step 3: Keep it Awake 24/7 (Cron-Job.org — Self-Hosters Only)
 
-Render's free tier puts inactive websites to sleep after 15 minutes. To keep WAKeep active 24/7 without paying anything:
+> [!NOTE]
+> **Who needs this step?**
+> - **Website users (`wakeep.onrender.com`):** ❌ **NOT NEEDED.** The server administrator already runs an automated 5-minute keep-alive ping for all sessions on the website.
+> - **Self-hosters (deploying on their own Render account):** ✅ **REQUIRED.** Render's free tier puts inactive websites to sleep after 15 minutes of inactivity unless you configure this free ping.
+
+To keep your personal self-hosted WAKeep active 24/7 without paying anything:
 
 1. Sign up for a free account at [cron-job.org](https://cron-job.org).
 2. Click **Create Cronjob**:
@@ -257,6 +273,11 @@ We designed WAKeep around strict privacy and legal compliance principles:
 <details>
 <summary><strong>5. How is my console secured against unauthorized visitors?</strong></summary>
 <p>Every WAKeep instance is protected by a mandatory 8+ character password (<code>ADMIN_PASSWORD</code>) with built-in rate-limiting (maximum 15 attempts per 15 minutes to block brute-force attacks) and constant-time cryptographic verification (<code>crypto.timingSafeEqual</code>). You can configure your secret password anytime in your Render dashboard under the <strong>Environment</strong> tab.</p>
+</details>
+
+<details>
+<summary><strong>6. If I activate my session on wakeep.onrender.com, do I need to set up a 5-minute ping or cron job?</strong></summary>
+<p><strong>No, absolutely not!</strong> Zero setup is required. When you use <a href="https://wakeep.onrender.com">https://wakeep.onrender.com</a>, the cloud server is already kept awake 24/7 by an automated background keep-alive monitor maintained by the host. All user sessions running on the server inherit this 24/7 continuous uptime automatically. The 5-minute ping instructions (via cron-job.org) are strictly for developers who fork this repository to self-host on their own private Render free tier.</p>
 </details>
 
 ---
