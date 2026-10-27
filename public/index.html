@@ -959,6 +959,13 @@
       if (socket) return;
       socket = io({ auth: { token: authToken } });
 
+      socket.on('connect_error', (err) => {
+        console.warn('Socket connection error:', err?.message || err);
+        if (err?.message && (err.message.includes('Unauthorized') || err.message.includes('Authentication PIN required'))) {
+          lockConsole();
+        }
+      });
+
       socket.on('session_status', (telemetry) => {
         applyTelemetry(telemetry);
       });

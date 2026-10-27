@@ -109,7 +109,7 @@ export class WhatsAppClientManager {
   private broadcastStatus() {
     if (!this.io) return;
     const telemetry = this.getTelemetry();
-    this.io.emit('session_status', {
+    this.io.to('authenticated').emit('session_status', {
       ...telemetry,
       qrDataUrl: this.currentQrDataUrl,
       pairingCode: this.lastPairingCode
@@ -258,7 +258,7 @@ export class WhatsAppClientManager {
         if (summary) {
           await this.persistMessage(summary);
           if (this.io) {
-            this.io.emit('new_message', summary);
+            this.io.to('authenticated').emit('new_message', summary);
           }
         }
       }
