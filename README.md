@@ -74,29 +74,15 @@ When you link WAKeep, WhatsApp registers it as an authorized **Desktop Companion
 
 ---
 
-## ⚡ Quick Start: Use Without Coding (For Non-Tech Users)
+## 🔒 Personal Private Gateway Architecture
 
-If you don't know programming or don't want to set up cloud accounts, you can start using WAKeep immediately through the official hosted portal:
-
-### 👉 **Live Portal:** [https://wakeep.onrender.com](https://wakeep.onrender.com)
-
-1. **Open the Website:**
-   Go to [https://wakeep.onrender.com](https://wakeep.onrender.com) in your phone or computer browser.
-2. **Unlock the Console:**
-   Enter the default security PIN:
-   ```text
-   4928
-   ```
-   and click **Unlock Console**.
-3. **Choose Your Linking Method:**
-   - **Method A (QR Code):** Open WhatsApp on your phone &rarr; tap the **three dots** (top right) or **Settings** &rarr; **Linked Devices** &rarr; **Link a Device** &rarr; Point your camera at the on-screen QR.
-   - **Method B (8-Digit Code - No Camera!):** Switch to the **8-Digit Phone Pairing Code** tab, enter your phone number with country code (e.g., `+91 98765 43210`), and enter the 8-character code that pops up inside your phone's WhatsApp prompt.
-4. **Done!**
-   The badge will turn **🟢 Connected 24/7**.
-   Your session is now linked. You can test it by clicking **Ping Phone** — you will immediately receive a test message on your WhatsApp!
-
-> [!NOTE]
-> You can disconnect or revoke access at any time directly from your phone by going to **WhatsApp &rarr; Linked Devices &rarr; WAKeep &rarr; Log out**.
+> [!IMPORTANT]
+> **One Instance = One Private WhatsApp Account:**
+> WAKeep is an encrypted, **personal self-hosted companion bridge**. Because it connects directly to your private personal WhatsApp messages and contacts, each user must run their own free private deployment.
+> 
+> **Never link your personal WhatsApp account to a public shared website operated by strangers.**
+> 
+> The live deployment at **[https://wakeep.onrender.com](https://wakeep.onrender.com)** serves as the production reference demonstration. To connect your personal phone safely and for free, follow the 5-minute setup below to get your own 100% private cloud instance protected by your secret PIN.
 
 ---
 
@@ -189,7 +175,7 @@ EXECUTE FUNCTION prune_old_wa_messages();
 | `SUPABASE_URL` | `https://your-id.supabase.co` | From Supabase Project Settings |
 | `SUPABASE_KEY` | `eyJhbGciOi...` | Supabase **service_role** secret key |
 | `VAULT_SECRET_KEY` | `64-character hex key` | 32-byte AES key (see generator below) |
-| `ADMIN_PIN` | `4928` | Your personal 4-digit dashboard unlock PIN |
+| `ADMIN_PIN` | `Choose your secret PIN (e.g. 7842)` | Your personal secret dashboard unlock PIN |
 | `JWT_SECRET` | `random_secret_phrase_here` | Any long random string |
 
 > [!TIP]
@@ -260,8 +246,8 @@ We designed WAKeep around strict privacy and legal compliance principles:
 </details>
 
 <details>
-<summary><strong>5. Can I change the default PIN (4928)?</strong></summary>
-<p>Yes! In your Render dashboard, go to <strong>Environment</strong>, update the <code>ADMIN_PIN</code> variable to any 4-to-8 digit number you prefer, and click Save Changes.</p>
+<summary><strong>5. How is my console secured against unauthorized visitors?</strong></summary>
+<p>Every WAKeep instance is protected by your personal secret <code>ADMIN_PIN</code> with built-in rate-limiting (maximum 15 attempts per 15 minutes to prevent brute-force attacks) and constant-time cryptographic verification (<code>crypto.timingSafeEqual</code>). You can configure or change your PIN anytime in your Render dashboard under the <strong>Environment</strong> tab.</p>
 </details>
 
 ---
