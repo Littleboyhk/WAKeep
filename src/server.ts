@@ -405,22 +405,11 @@ app.post('/api/session/reset', requirePinAuth, resetRateLimiter, async (req: Aut
 });
 
 app.get('/api/session/messages', requirePinAuth, async (_req: Request, res: Response) => {
-  try {
-    const { data, error } = await supabase
-      .from('wa_recent_messages')
-      .select('*')
-      .order('message_timestamp', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      res.status(500).json({ error: error.message });
-      return;
-    }
-
-    res.json({ messages: data || [] });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to fetch messages.' });
-  }
+  // Privacy Guarantee: Zero Data Collection active — No user messages are logged or collected
+  res.json({
+    messages: [],
+    privacy: 'Zero Data Collection active. WAKeep does not record or read personal messages.'
+  });
 });
 
 // ----------------------------------------------------------------------------

@@ -99,10 +99,10 @@ WAKeep features an **Isolated Multi-Session Architecture**:
 ### 2. Returning to Your Active Session:
 1. Switch to **"Unlock Existing Session"**.
 2. Enter your session name and your 8+ character password.
-3. Click **"Unlock My Console"** to view live connection telemetry, test pings, and messages.
+3. Click **"Unlock My Console"** to view live connection telemetry, test pings, and heartbeat status.
 
 > [!TIP]
-> Each session is encrypted with AES-256-GCM in the cloud vault. Different users' QR codes, credentials, and messages are completely isolated in separate rooms.
+> Each session is encrypted with AES-256-GCM in the cloud vault. Different users' QR codes, credentials, and telemetry are completely isolated in separate rooms.
 
 ---
 
@@ -127,44 +127,13 @@ Want 100% control over your own personal server and database? You can deploy you
 
 ```sql
 -- Create encrypted credentials vault table
+-- (WAKeep collects ZERO messages and only stores encrypted multi-device auth tokens)
 CREATE TABLE IF NOT EXISTS wa_auth_vault (
   id TEXT PRIMARY KEY,
   encrypted_payload TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-
--- Create recent message cache table
-CREATE TABLE IF NOT EXISTS wa_recent_messages (
-  message_id TEXT PRIMARY KEY,
-  chat_jid TEXT NOT NULL,
-  sender_jid TEXT NOT NULL,
-  sender_name TEXT,
-  from_me BOOLEAN NOT NULL DEFAULT FALSE,
-  text_content TEXT,
-  message_timestamp BIGINT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Auto-prune messages older than 200 rows to keep database lightweight
-CREATE OR REPLACE FUNCTION prune_old_wa_messages()
-RETURNS TRIGGER AS $$
-BEGIN
-  DELETE FROM wa_recent_messages
-  WHERE message_id NOT IN (
-    SELECT message_id FROM wa_recent_messages
-    ORDER BY message_timestamp DESC
-    LIMIT 200
-  );
-  RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trigger_prune_wa_messages ON wa_recent_messages;
-CREATE TRIGGER trigger_prune_wa_messages
-AFTER INSERT ON wa_recent_messages
-FOR EACH STATEMENT
-EXECUTE FUNCTION prune_old_wa_messages();
 ```
 
 5. Go to **Project Settings** (gear icon) &rarr; **API**:
@@ -296,7 +265,7 @@ WAKeep exposes clean, rate-limited REST endpoints for developers building person
 | `POST` | `/api/session/message` | 🔑 Admin Auth | Dispatches an outgoing message to any phone number or JID |
 | `POST` | `/api/session/ping` | 🔑 Admin Auth | Sends an automated self-addressed latency ping to linked phone |
 | `POST` | `/api/session/reset` | 🔑 Admin Auth | Clears the encrypted Supabase vault to prepare for fresh scan |
-| `GET` | `/api/session/messages` | 🔑 Admin Auth | Returns recent incoming and outgoing message summaries |
+| `GET` | `/api/session/messages` | 🔑 Admin Auth | Returns empty list (Zero Data Collection: No chat messages stored) |
 
 ---
 

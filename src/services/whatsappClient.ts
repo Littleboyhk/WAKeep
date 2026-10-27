@@ -5,8 +5,7 @@ import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
   proto,
-  WASocket,
-  WAMessage
+  WASocket
 } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import QRCode from 'qrcode';
@@ -248,102 +247,6 @@ export class WhatsAppClientManager {
         }
       }
     });
-
-    // Incoming & Outgoing Messages
-    this.sock.ev.on('messages.upsert', async ({ messages, type }) => {
-      if (type !== 'notify' && type !== 'append') return;
-
-      for (const msg of messages) {
-        if (!msg.message || !msg.key.remoteJid) continue;
-
-        // Skip status broadcasts
-        if (msg.key.remoteJid === 'status@broadcast') continue;
-
-        const summary = this.extractMessageSummary(msg);
-        if (summary) {
-          await this.persistMessage(summary);
-          if (this.io) {
-            this.io.to(`session:${this.sessionId}`).emit('new_message', summary);
-          }
-        }
-      }
-    });
-  }
-
-  private extractMessageSummary(msg: WAMessage): ChatMessageSummary | null {
-    const key = msg.key;
-    if (!key.id || !key.remoteJid) return null;
-
-    const messageContent = msg.message;
-    let text = '';
-
-    if (messageContent) {
-      if (messageContent.conversation) {
-        text = messageContent.conversation;
-      } else if (messageContent.extendedTextMessage?.text) {
-        text = messageContent.extendedTextMessage.text;
-      } else if (messageContent.imageMessage?.caption) {
-        text = `📷 ${messageContent.imageMessage.caption}`;
-      } else if (messageContent.imageMessage) {
-        text = '📷 Photo';
-      } else if (messageContent.videoMessage?.caption) {
-        text = `🎥 ${messageContent.videoMessage.caption}`;
-      } else if (messageContent.videoMessage) {
-        text = '🎥 Video';
-      } else if (messageContent.documentMessage?.title) {
-        text = `📄 ${messageContent.documentMessage.title}`;
-      } else if (messageContent.documentMessage) {
-        text = '📄 Document';
-      } else if (messageContent.audioMessage) {
-        text = '🎵 Voice message';
-      } else if (messageContent.contactMessage?.displayName) {
-        text = `👤 Contact: ${messageContent.contactMessage.displayName}`;
-      } else if (messageContent.locationMessage) {
-        text = '📍 Location pin';
-      } else {
-        const types = Object.keys(messageContent).filter(k => k !== 'messageContextInfo');
-        text = types.length > 0 ? `[${types[0]}]` : '[Message]';
-      }
-    }
-
-    const fromMe = Boolean(key.fromMe);
-    const chatJid = key.remoteJid;
-    const senderJid = key.participant || (fromMe ? (this.sock?.user?.id || 'me') : chatJid);
-    const senderName = msg.pushName || (fromMe ? 'You' : '');
-    const timestampNumber = typeof msg.messageTimestamp === 'number'
-      ? msg.messageTimestamp
-      : typeof msg.messageTimestamp?.low === 'number'
-      ? msg.messageTimestamp.low
-      : Math.floor(Date.now() / 1000);
-
-    return {
-      message_id: key.id,
-      chat_jid: chatJid,
-      sender_jid: senderJid,
-      sender_name: senderName,
-      from_me: fromMe,
-      text_content: text,
-      message_timestamp: timestampNumber
-    };
-  }
-
-  private async persistMessage(summary: ChatMessageSummary): Promise<void> {
-    try {
-      await this.supabase.from('wa_recent_messages').upsert(
-        {
-          message_id: summary.message_id,
-          chat_jid: summary.chat_jid,
-          sender_jid: summary.sender_jid,
-          sender_name: summary.sender_name,
-          from_me: summary.from_me,
-          text_content: summary.text_content,
-          message_timestamp: summary.message_timestamp
-        },
-        { onConflict: 'message_id' }
-      );
-    } catch (dbErr: any) {
-      console.warn('[WhatsAppClient] Non-fatal: could not persist message to Supabase:', dbErr.message);
-    }
   }
 
   private scheduleReconnect(): void {
