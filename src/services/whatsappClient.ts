@@ -106,11 +106,16 @@ export class WhatsAppClientManager {
     };
   }
 
+  public getSessionId(): string {
+    return this.sessionId;
+  }
+
   private broadcastStatus() {
     if (!this.io) return;
     const telemetry = this.getTelemetry();
-    this.io.to('authenticated').emit('session_status', {
+    this.io.to(`session:${this.sessionId}`).emit('session_status', {
       ...telemetry,
+      sessionId: this.sessionId,
       qrDataUrl: this.currentQrDataUrl,
       pairingCode: this.lastPairingCode
     });
@@ -258,7 +263,7 @@ export class WhatsAppClientManager {
         if (summary) {
           await this.persistMessage(summary);
           if (this.io) {
-            this.io.to('authenticated').emit('new_message', summary);
+            this.io.to(`session:${this.sessionId}`).emit('new_message', summary);
           }
         }
       }

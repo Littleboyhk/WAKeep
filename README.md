@@ -74,15 +74,24 @@ When you link WAKeep, WhatsApp registers it as an authorized **Desktop Companion
 
 ---
 
-## 🔒 Personal Private Gateway Architecture
+## 🌐 Multi-Session Hub (Activate Your Personal 24/7 Companion)
 
-> [!IMPORTANT]
-> **One Instance = One Private WhatsApp Account:**
-> WAKeep is an encrypted, **personal self-hosted companion bridge**. Because it connects directly to your private personal WhatsApp messages and contacts, each user must run their own free private deployment.
-> 
-> **Never link your personal WhatsApp account to a public shared website operated by strangers.**
-> 
-> The live deployment at **[https://wakeep.onrender.com](https://wakeep.onrender.com)** serves as the production reference demonstration. To connect your personal phone safely and for free, follow the 5-minute setup below to get your own 100% private cloud instance protected by your secret PIN.
+WAKeep features an **Isolated Multi-Session Architecture**:
+
+### 1. Activating a New Session (For New Users):
+1. Go to **[https://wakeep.onrender.com](https://wakeep.onrender.com)**.
+2. Under **"Activate New Session"**, enter a unique session name or your phone number (e.g. `rahul` or `919876543210`).
+3. Set your own private password (mandatory minimum 8 characters).
+4. Click **"Generate My QR Code"** &rarr; Your own dedicated QR code (or 8-digit phone pairing code) will appear instantly.
+5. Scan with WhatsApp (**Settings &rarr; Linked Devices &rarr; Link a Device**). Once linked, your session stays active 24/7!
+
+### 2. Returning to Your Active Session:
+1. Switch to **"Unlock Existing Session"**.
+2. Enter your session name and your 8+ character password.
+3. Click **"Unlock My Console"** to view live connection telemetry, test pings, and messages.
+
+> [!TIP]
+> Each session is encrypted with AES-256-GCM in the cloud vault. Different users' QR codes, credentials, and messages are completely isolated in separate rooms.
 
 ---
 

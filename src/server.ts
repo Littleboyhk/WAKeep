@@ -11,7 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Server as SocketIOServer } from 'socket.io';
 import { createClient } from '@supabase/supabase-js';
-import { WhatsAppClientManager } from './services/whatsappClient.js';
+import { MultiSessionManager } from './services/sessionManager.js';
 
 dotenv.config();
 
@@ -47,10 +47,6 @@ if (!JWT_SECRET) {
   }
 }
 
-if (process.env.NODE_ENV === 'production' && ADMIN_PASSWORD === 'wakeep#2026') {
-  console.warn('⚠️ [Security Notice] Using default ADMIN_PASSWORD. Please set your own unique 8+ character ADMIN_PASSWORD in your Render environment variables.');
-}
-
 const VAULT_SECRET_KEY = process.env.VAULT_SECRET_KEY || 'e83b4f6a1c890d2e5a7b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f';
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
@@ -77,12 +73,13 @@ const supabase = createClient(
   }
 );
 
-// Instantiate WhatsApp Client Manager
-const waManager = new WhatsAppClientManager({
+// Instantiate Multi-Session Manager
+const sessionManager = new MultiSessionManager({
   supabase,
   vaultSecret: VAULT_SECRET_KEY,
-  sessionId: SESSION_ID,
-  io
+  io,
+  adminPassword: ADMIN_PASSWORD,
+  defaultSessionId: SESSION_ID
 });
 
 // ----------------------------------------------------------------------------
@@ -107,10 +104,10 @@ app.use(cors({
 app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 
-// Rate Limiting on Login to prevent brute force attacks
+// Rate Limiting on Login / Session creation to prevent brute force attacks
 const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15, // Limit each IP to 15 attempts per window
+  max: 20, // Limit each IP to 20 attempts per window
   message: { error: 'Too many authentication attempts. Please try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -144,10 +141,11 @@ const resetRateLimiter = rateLimit({
 });
 
 /**
- * Authentication Middleware: Validates JWT token from Bearer header or cookie
+ * Authentication Middleware: Validates JWT token and extracts sessionId
  */
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   userRole?: string;
+  sessionId?: string;
 }
 
 const requirePinAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
@@ -161,13 +159,14 @@ const requirePinAuth = (req: AuthenticatedRequest, res: Response, next: NextFunc
   }
 
   if (!token) {
-    res.status(401).json({ error: 'Unauthorized: PIN authentication required.' });
+    res.status(401).json({ error: 'Unauthorized: Session authentication required.' });
     return;
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { role: string; sessionId?: string };
     req.userRole = decoded.role;
+    req.sessionId = decoded.sessionId || SESSION_ID;
     next();
   } catch (err) {
     res.status(401).json({ error: 'Unauthorized: Session token expired or invalid.' });
@@ -181,6 +180,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
   const memory = process.memoryUsage();
   res.status(200).json({
     status: 'ok',
+    activeSessions: sessionManager.getActiveSessionsCount(),
     uptime: Math.floor(process.uptime()),
     timestamp: Date.now(),
     heapUsedMB: Math.round((memory.heapUsed / 1024 / 1024) * 10) / 10
@@ -188,46 +188,111 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------------------------------
-// Authentication Endpoints (Constant-Time Verification)
+// Multi-Session Hub Endpoints (Create New Session & Login to Existing)
 // ----------------------------------------------------------------------------
-app.post('/api/auth/login', loginRateLimiter, (req: Request, res: Response) => {
+
+/**
+ * POST /api/sessions/create
+ * Allows any new user to create their own session and get a fresh, dedicated QR code
+ */
+app.post('/api/sessions/create', loginRateLimiter, async (req: Request, res: Response) => {
+  const { sessionId, password } = req.body;
+
+  if (!sessionId || !password) {
+    res.status(400).json({ error: 'Session Name and Password (minimum 8 characters) are required.' });
+    return;
+  }
+
+  try {
+    const { manager, sessionId: cleanId } = await sessionManager.createSession(sessionId, password);
+    const token = jwt.sign({ role: 'user', sessionId: cleanId }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.cookie('wakeep_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      token,
+      sessionId: cleanId,
+      message: 'New session created successfully. Ready for QR scan.'
+    });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Failed to create new session.' });
+  }
+});
+
+/**
+ * POST /api/sessions/login
+ * Allows returning users to unlock their private session console
+ */
+app.post('/api/sessions/login', loginRateLimiter, async (req: Request, res: Response) => {
+  const { sessionId, password } = req.body;
+  const targetSessionId = sessionId || req.body.pin ? (sessionId || SESSION_ID) : SESSION_ID;
+  const pass = password || req.body.pin;
+
+  if (!pass) {
+    res.status(400).json({ error: 'Password is required.' });
+    return;
+  }
+
+  try {
+    const { manager, sessionId: cleanId } = await sessionManager.loginSession(targetSessionId, pass);
+    const token = jwt.sign({ role: 'user', sessionId: cleanId }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.cookie('wakeep_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      token,
+      sessionId: cleanId,
+      message: 'Session unlocked successfully.'
+    });
+  } catch (err: any) {
+    res.status(401).json({ error: err.message || 'Invalid credentials. Access denied.' });
+  }
+});
+
+/**
+ * Backward compatibility: POST /api/auth/login
+ */
+app.post('/api/auth/login', loginRateLimiter, async (req: Request, res: Response) => {
   const rawInput = req.body.password || req.body.pin;
+  const targetSessionId = req.body.sessionId || SESSION_ID;
 
   if (!rawInput) {
     res.status(400).json({ error: 'Password is required.' });
     return;
   }
 
-  const password = String(rawInput).trim();
-  if (password.length < 8) {
-    res.status(400).json({ error: 'Password must be at least 8 characters long.' });
-    return;
+  try {
+    const { manager, sessionId: cleanId } = await sessionManager.loginSession(targetSessionId, rawInput);
+    const token = jwt.sign({ role: 'admin', sessionId: cleanId }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.cookie('wakeep_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      token,
+      sessionId: cleanId,
+      message: 'Authentication successful.'
+    });
+  } catch (err: any) {
+    res.status(401).json({ error: err.message || 'Invalid password. Access denied.' });
   }
-
-  // Constant-time comparison using SHA-256 to prevent timing side-channel attacks
-  const inputBuffer = crypto.createHash('sha256').update(password).digest();
-  const expectedBuffer = crypto.createHash('sha256').update(String(ADMIN_PASSWORD).trim()).digest();
-
-  if (!crypto.timingSafeEqual(inputBuffer, expectedBuffer)) {
-    res.status(401).json({ error: 'Invalid password. Access denied.' });
-    return;
-  }
-
-  // Issue 7-day JWT token
-  const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '7d' });
-
-  res.cookie('wakeep_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-  });
-
-  res.json({
-    success: true,
-    token,
-    message: 'Authentication successful.'
-  });
 });
 
 app.get('/api/auth/verify', (req: Request, res: Response) => {
@@ -245,8 +310,8 @@ app.get('/api/auth/verify', (req: Request, res: Response) => {
   }
 
   try {
-    jwt.verify(token, JWT_SECRET);
-    res.json({ authenticated: true });
+    const decoded = jwt.verify(token, JWT_SECRET) as { sessionId?: string };
+    res.json({ authenticated: true, sessionId: decoded.sessionId || SESSION_ID });
   } catch {
     res.json({ authenticated: false });
   }
@@ -258,19 +323,22 @@ app.post('/api/auth/logout', (_req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------------------------------
-// Protected Session Management Endpoints
+// Session-Scoped Protected Endpoints
 // ----------------------------------------------------------------------------
-app.get('/api/session/status', requirePinAuth, (_req: Request, res: Response) => {
-  const telemetry = waManager.getTelemetry();
+app.get('/api/session/status', requirePinAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const targetSessionId = req.sessionId || SESSION_ID;
+  const manager = await sessionManager.getOrLoadSession(targetSessionId);
+  const telemetry = manager.getTelemetry();
   res.json({
     ...telemetry,
-    qrDataUrl: waManager.getQrCode(),
-    pairingCode: waManager.getLastPairingCode(),
+    sessionId: targetSessionId,
+    qrDataUrl: manager.getQrCode(),
+    pairingCode: manager.getLastPairingCode(),
     vaultConnected: Boolean(SUPABASE_URL && SUPABASE_KEY)
   });
 });
 
-app.post('/api/session/pair', requirePinAuth, pairRateLimiter, async (req: Request, res: Response) => {
+app.post('/api/session/pair', requirePinAuth, pairRateLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const { phoneNumber } = req.body;
   if (!phoneNumber) {
     res.status(400).json({ error: 'Phone number is required.' });
@@ -278,21 +346,22 @@ app.post('/api/session/pair', requirePinAuth, pairRateLimiter, async (req: Reque
   }
 
   try {
-    const code = await waManager.requestPairingCode(phoneNumber);
+    const targetSessionId = req.sessionId || SESSION_ID;
+    const manager = await sessionManager.getOrLoadSession(targetSessionId);
+    const code = await manager.requestPairingCode(phoneNumber);
     res.json({ success: true, code });
   } catch (err: any) {
     res.status(400).json({ error: err.message || 'Failed to request pairing code.' });
   }
 });
 
-app.post('/api/session/message', requirePinAuth, messageRateLimiter, async (req: Request, res: Response) => {
+app.post('/api/session/message', requirePinAuth, messageRateLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const { recipient, text } = req.body;
   if (!recipient || !text) {
     res.status(400).json({ error: 'Recipient and text are both required.' });
     return;
   }
 
-  // Input length validation to prevent socket/memory exhaustion
   if (typeof text !== 'string' || text.trim().length === 0 || text.length > 4096) {
     res.status(400).json({ error: 'Message content must be between 1 and 4096 characters.' });
     return;
@@ -304,26 +373,32 @@ app.post('/api/session/message', requirePinAuth, messageRateLimiter, async (req:
   }
 
   try {
-    const result = await waManager.sendMessage(recipient, text);
+    const targetSessionId = req.sessionId || SESSION_ID;
+    const manager = await sessionManager.getOrLoadSession(targetSessionId);
+    const result = await manager.sendMessage(recipient, text);
     res.json({ success: true, result });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to send message.' });
   }
 });
 
-app.post('/api/session/ping', requirePinAuth, async (_req: Request, res: Response) => {
+app.post('/api/session/ping', requirePinAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const result = await waManager.sendTestPingToSelf();
+    const targetSessionId = req.sessionId || SESSION_ID;
+    const manager = await sessionManager.getOrLoadSession(targetSessionId);
+    const result = await manager.sendTestPingToSelf();
     res.json({ success: true, result, message: 'Test ping dispatched to connected phone.' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to send test ping.' });
   }
 });
 
-app.post('/api/session/reset', requirePinAuth, resetRateLimiter, async (_req: Request, res: Response) => {
+app.post('/api/session/reset', requirePinAuth, resetRateLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    await waManager.resetVault();
-    res.json({ success: true, message: 'Vault cleared and fresh session initialized.' });
+    const targetSessionId = req.sessionId || SESSION_ID;
+    const manager = await sessionManager.getOrLoadSession(targetSessionId);
+    await manager.resetVault();
+    res.json({ success: true, message: 'Session vault cleared. Fresh QR ready.' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to reset vault.' });
   }
@@ -369,38 +444,47 @@ io.use((socket, next) => {
     token = socket.handshake.headers.cookie.match(/wakeep_token=([^;]+)/)?.[1];
   }
 
-  // Strict Token Enforcement: Reject unauthenticated connections to protect messages
   if (!token) {
-    return next(new Error('Unauthorized: Authentication PIN required for WebSocket connection'));
+    return next(new Error('Unauthorized: Authentication required for WebSocket'));
   }
 
   try {
-    jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as { sessionId?: string };
+    socket.data.sessionId = decoded.sessionId || SESSION_ID;
     next();
   } catch {
     return next(new Error('Unauthorized: Invalid or expired session token'));
   }
 });
 
-io.on('connection', (socket) => {
-  // Join isolated authenticated room for verified admin
-  socket.join('authenticated');
+io.on('connection', async (socket) => {
+  const sessionId = socket.data.sessionId || SESSION_ID;
+  const roomName = `session:${sessionId}`;
 
-  // Emit current telemetry state only to the verified connection
-  const telemetry = waManager.getTelemetry();
-  socket.emit('session_status', {
-    ...telemetry,
-    qrDataUrl: waManager.getQrCode(),
-    pairingCode: waManager.getLastPairingCode()
-  });
+  // Join isolated room for this specific user session
+  socket.join(roomName);
 
-  socket.on('request_status', () => {
+  try {
+    const manager = await sessionManager.getOrLoadSession(sessionId);
+    const telemetry = manager.getTelemetry();
     socket.emit('session_status', {
-      ...waManager.getTelemetry(),
-      qrDataUrl: waManager.getQrCode(),
-      pairingCode: waManager.getLastPairingCode()
+      ...telemetry,
+      sessionId,
+      qrDataUrl: manager.getQrCode(),
+      pairingCode: manager.getLastPairingCode()
     });
-  });
+
+    socket.on('request_status', () => {
+      socket.emit('session_status', {
+        ...manager.getTelemetry(),
+        sessionId,
+        qrDataUrl: manager.getQrCode(),
+        pairingCode: manager.getLastPairingCode()
+      });
+    });
+  } catch (err: any) {
+    console.error(`[Socket] Error fetching session [${sessionId}]:`, err.message);
+  }
 });
 
 // ----------------------------------------------------------------------------
@@ -410,26 +494,23 @@ server.listen(PORT, async () => {
   console.log(`=======================================================`);
   console.log(`🚀 WAKeep started on port ${PORT}`);
   console.log(`📡 Health Check URL: http://localhost:${PORT}/api/health`);
-  console.log(`🔒 Vault ID: ${SESSION_ID}`);
   console.log(`🛡️  Reverse Proxy Trust: Enabled (trust proxy: 1)`);
+  console.log(`🌐 Multi-Session Hub: Active (Default: ${SESSION_ID})`);
   console.log(`=======================================================`);
 
-  // Start WhatsApp Client if Supabase credentials are configured
+  // Start Sessions from Supabase Vault
   if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes('placeholder')) {
-    console.log('[Server] Initializing WhatsApp Client with Supabase Vault...');
-    waManager.init().catch((err) => {
-      console.error('[Server] Initial WhatsApp connection failed:', err);
-    });
+    console.log('[Server] Connecting Multi-Session Manager to Supabase Vault...');
+    await sessionManager.init();
   } else {
     console.warn('[Server] Supabase credentials not set or placeholder detected in .env.');
-    console.warn('[Server] Please configure SUPABASE_URL and SUPABASE_KEY to start WhatsApp Gateway.');
   }
 });
 
 // Graceful Shutdown Handling
 const handleTermination = async (signal: string) => {
   console.log(`[Server] Received ${signal}. Starting graceful shutdown...`);
-  await waManager.shutdown();
+  await sessionManager.shutdownAll();
   server.close(() => {
     console.log('[Server] HTTP server closed cleanly.');
     process.exit(0);
@@ -439,4 +520,4 @@ const handleTermination = async (signal: string) => {
 process.on('SIGINT', () => handleTermination('SIGINT'));
 process.on('SIGTERM', () => handleTermination('SIGTERM'));
 
-export { app, server, waManager };
+export { app, server, sessionManager };
