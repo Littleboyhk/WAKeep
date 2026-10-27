@@ -204,7 +204,7 @@
             Server Companion
           </span>
           <span id="mobileSlotsBadge" class="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            Checking slots...
+            Slots Available
           </span>
         </div>
         <div class="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 border-t border-slate-200/50 dark:border-slate-800/50 pt-1.5">
@@ -299,11 +299,29 @@
           <span id="slotsDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
           <span class="font-bold text-slate-700 dark:text-slate-300">Server Capacity:</span>
           <span id="slotsCountBadge" class="font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs">
-            Checking live slots...
+            Slots Available
           </span>
         </div>
         <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Backend Verified</span>
       </div>
+      <script>
+        (function() {
+          try {
+            var raw = localStorage.getItem('wakeep_slots_cache');
+            if (raw) {
+              var d = JSON.parse(raw);
+              var b = document.getElementById('slotsCountBadge');
+              var m = document.getElementById('mobileSlotsBadge');
+              var rem = typeof d.slotsRemaining === 'number' ? d.slotsRemaining : null;
+              var tot = d.totalSlots || 10;
+              if (rem !== null) {
+                if (b) b.textContent = rem + ' of ' + tot + ' Slots Available';
+                if (m) m.textContent = rem + ' of ' + tot + ' Slots Free';
+              }
+            }
+          } catch(e) {}
+        })();
+      </script>
 
       <!-- Session Hub Mode Switcher -->
       <div class="flex justify-center mb-4">
@@ -1257,8 +1275,100 @@
     let uptimeSeconds = 0;
     let uptimeInterval = null;
 
-    // On Load
-    window.addEventListener('DOMContentLoaded', async () => {
+    // Render slots UI elements with real-time capacity data
+    function renderSlotsUI(data) {
+      if (!data) return;
+      const totalSlots = data.totalSlots || 10;
+      const slotsRemaining = typeof data.slotsRemaining === 'number' ? data.slotsRemaining : 10;
+      const badge = document.getElementById('slotsCountBadge');
+      const dot = document.getElementById('slotsDot');
+      const createBtn = document.getElementById('createSessionBtn');
+      const mobileBadge = document.getElementById('mobileSlotsBadge');
+
+      if (badge) {
+        badge.textContent = `${slotsRemaining} of ${totalSlots} Slots Available`;
+        if (slotsRemaining <= 0) {
+          badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs';
+          if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0';
+          if (createBtn) {
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<span>Server Capacity Full (0 Slots Left)</span>';
+          }
+        } else if (slotsRemaining <= 2) {
+          badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs';
+          if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0';
+          if (createBtn && createBtn.disabled && createBtn.textContent.includes('Full')) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+          }
+        } else {
+          badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs';
+          if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0';
+          if (createBtn && createBtn.disabled && createBtn.textContent.includes('Full')) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+          }
+        }
+      }
+
+      if (mobileBadge) {
+        mobileBadge.textContent = `${slotsRemaining} of ${totalSlots} Slots Free`;
+        if (slotsRemaining <= 0) {
+          mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20';
+        } else if (slotsRemaining <= 2) {
+          mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
+        } else {
+          mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+        }
+      }
+    }
+
+    // Hydrate from localStorage immediately
+    function hydrateCachedSlots() {
+      try {
+        const raw = localStorage.getItem('wakeep_slots_cache');
+        if (raw) {
+          const cached = JSON.parse(raw);
+          renderSlotsUI(cached);
+        }
+      } catch (e) {}
+    }
+
+    async function updateServerSlots() {
+      try {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(() => controller.abort(), 4000) : null;
+        const res = await fetch('/api/slots', {
+          signal: controller ? controller.signal : undefined,
+          headers: { 'Accept': 'application/json' }
+        });
+        if (timeoutId) clearTimeout(timeoutId);
+        if (!res.ok) return;
+        const data = await res.json();
+        renderSlotsUI(data);
+        try {
+          localStorage.setItem('wakeep_slots_cache', JSON.stringify({
+            slotsRemaining: data.slotsRemaining,
+            totalSlots: data.totalSlots,
+            isFull: data.isFull,
+            ts: Date.now()
+          }));
+        } catch (e) {}
+      } catch (err) {
+        // Fallback gracefully so badge never hangs on "Checking..."
+        const badge = document.getElementById('slotsCountBadge');
+        if (badge && badge.textContent.includes('Checking')) {
+          badge.textContent = 'Slots Available';
+        }
+        const mobileBadge = document.getElementById('mobileSlotsBadge');
+        if (mobileBadge && mobileBadge.textContent.includes('Checking')) {
+          mobileBadge.textContent = 'Slots Free';
+        }
+      }
+    }
+
+    // On Load - non-blocking parallel initialization
+    window.addEventListener('DOMContentLoaded', () => {
       // Dark mode preference
       if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
@@ -1266,59 +1376,19 @@
         document.documentElement.classList.remove('dark');
       }
 
-      startUptimeClock();
-      await verifyAuthentication();
+      // 1. Instant 0ms cached slots rendering
+      hydrateCachedSlots();
+
+      // 2. Immediate slots network check in parallel (does NOT wait for auth)
       updateServerSlots();
       setInterval(updateServerSlots, 15000);
-    });
 
-    async function updateServerSlots() {
-      try {
-        const res = await fetch('/api/slots');
-        if (!res.ok) return;
-        const data = await res.json();
-        const badge = document.getElementById('slotsCountBadge');
-        const dot = document.getElementById('slotsDot');
-        const createBtn = document.getElementById('createSessionBtn');
-        if (badge) {
-          badge.textContent = `${data.slotsRemaining} of ${data.totalSlots} Slots Available`;
-          if (data.slotsRemaining <= 0) {
-            badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs';
-            if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0';
-            if (createBtn) {
-              createBtn.disabled = true;
-              createBtn.innerHTML = '<span>Server Capacity Full (0 Slots Left)</span>';
-            }
-          } else if (data.slotsRemaining <= 2) {
-            badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs';
-            if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0';
-            if (createBtn && createBtn.disabled && createBtn.textContent.includes('Full')) {
-              createBtn.disabled = false;
-              createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
-            }
-          } else {
-            badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs';
-            if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0';
-            if (createBtn && createBtn.disabled && createBtn.textContent.includes('Full')) {
-              createBtn.disabled = false;
-              createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
-            }
-          }
-        const mobileBadge = document.getElementById('mobileSlotsBadge');
-        if (mobileBadge) {
-          mobileBadge.textContent = `${data.slotsRemaining} of ${data.totalSlots} Slots Free`;
-          if (data.slotsRemaining <= 0) {
-            mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20';
-          } else if (data.slotsRemaining <= 2) {
-            mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
-          } else {
-            mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
-          }
-        }
-      } catch (err) {
-        console.warn('Slots check warning:', err);
-      }
-    }
+      // 3. Start uptime clock
+      startUptimeClock();
+
+      // 4. Verify auth asynchronously in background
+      verifyAuthentication();
+    });
 
     function toggleTheme() {
       const isDark = document.documentElement.classList.toggle('dark');

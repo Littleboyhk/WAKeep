@@ -208,6 +208,7 @@ app.get('/api/slots', (_req: Request, res: Response) => {
   const maxSlots = parseInt(process.env.MAX_COMPANION_SLOTS || '10', 10);
   const activeSessions = sessionManager.getActiveSessionsCount();
   const slotsRemaining = Math.max(0, maxSlots - activeSessions);
+  res.setHeader('Cache-Control', 'public, max-age=5, stale-while-revalidate=15');
   res.json({
     totalSlots: maxSlots,
     activeSessions,
