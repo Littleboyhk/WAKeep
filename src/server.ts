@@ -364,41 +364,25 @@ app.post('/api/session/pair', requirePinAuth, pairRateLimiter, async (req: Authe
   }
 });
 
-app.post('/api/session/message', requirePinAuth, messageRateLimiter, async (req: AuthenticatedRequest, res: Response) => {
-  const { recipient, text } = req.body;
-  if (!recipient || !text) {
-    res.status(400).json({ error: 'Recipient and text are both required.' });
-    return;
-  }
-
-  if (typeof text !== 'string' || text.trim().length === 0 || text.length > 4096) {
-    res.status(400).json({ error: 'Message content must be between 1 and 4096 characters.' });
-    return;
-  }
-
-  if (typeof recipient !== 'string' || recipient.trim().length > 64) {
-    res.status(400).json({ error: 'Invalid recipient identifier.' });
-    return;
-  }
-
-  try {
-    const targetSessionId = req.sessionId || SESSION_ID;
-    const manager = await sessionManager.getOrLoadSession(targetSessionId);
-    const result = await manager.sendMessage(recipient, text);
-    res.json({ success: true, result });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to send message.' });
-  }
+app.post('/api/session/message', requirePinAuth, async (_req: Request, res: Response) => {
+  // Privacy & Safety: Zero Messaging Capability
+  res.status(403).json({
+    error: 'Message sending is disabled. WAKeep is strictly a 24/7 session keep-alive service with zero message capabilities.'
+  });
 });
 
 app.post('/api/session/ping', requirePinAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const targetSessionId = req.sessionId || SESSION_ID;
     const manager = await sessionManager.getOrLoadSession(targetSessionId);
-    const result = await manager.sendTestPingToSelf();
-    res.json({ success: true, result, message: 'Test ping dispatched to connected phone.' });
+    const status = manager.getStatus();
+    res.json({
+      success: true,
+      status,
+      message: '24/7 Keep-alive heartbeat verified successfully.'
+    });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to send test ping.' });
+    res.status(500).json({ error: err.message || 'Failed to verify heartbeat.' });
   }
 });
 

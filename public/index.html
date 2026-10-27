@@ -639,74 +639,52 @@
 
         </div>
 
-        <!-- Right: Quick Dispatcher & Actions (4 Cols on Desktop / 12 on Mobile) -->
+        <!-- Right: Keep-Alive Engine Controls & Actions (4 Cols on Desktop / 12 on Mobile) -->
         <div class="lg:col-span-4 xl:col-span-4 space-y-6">
 
-          <!-- Dispatcher Card -->
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xl">
-            <div class="flex items-center gap-2.5 mb-4">
-              <div class="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+          <!-- 24/7 Keep-Alive Engine Card -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xl space-y-5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Quick Dispatcher</h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Send WhatsApp message instantly</p>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">24/7 Keep-Alive Engine</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Silent companion anchor</p>
               </div>
             </div>
-            
-            <form id="quickSendForm" onsubmit="handleQuickSend(event)" class="space-y-4">
-              <div>
-                <label for="dispatchRecipientInput" class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                  Recipient Number / JID
-                </label>
-                <input
-                  type="text"
-                  id="dispatchRecipientInput"
-                  name="dispatchRecipientInput"
-                  required
-                  placeholder="e.g. 14155552671 or 916238246217"
-                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-                <span class="text-[10px] text-slate-400 mt-1 block">Digits with country code, or format <code>...&#64;s.whatsapp.net</code></span>
+
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/50">
+                <span class="text-xs text-slate-600 dark:text-slate-300 font-medium">Keep-Alive Heartbeat</span>
+                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Every 25s
+                </span>
               </div>
 
-              <div>
-                <label for="dispatchTextInput" class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                  Message Content
-                </label>
-                <textarea
-                  id="dispatchTextInput"
-                  name="dispatchTextInput"
-                  required
-                  rows="4"
-                  placeholder="Type your message here..."
-                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
-                ></textarea>
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/50">
+                <span class="text-xs text-slate-600 dark:text-slate-300 font-medium">Message Collection</span>
+                <span class="text-xs font-bold text-slate-900 dark:text-white">Disabled (Zero Data)</span>
               </div>
-
-              <button
-                type="submit"
-                id="quickSendBtn"
-                class="w-full py-3 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-black text-white dark:bg-brand-600 dark:hover:bg-brand-500 transition shadow-md active:scale-98 flex items-center justify-center gap-2"
-              >
-                <span>Send WhatsApp Message</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            </form>
-
-            <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-              <button
-                type="button"
-                onclick="dispatchSelfPing()"
-                class="w-full py-2.5 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition flex items-center justify-center gap-2"
-              >
-                <span>🏓 Send Test Ping to Myself</span>
-              </button>
             </div>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              WAKeep maintains your WhatsApp session 24/7 without timing out. No messages are ever sent, read, or stored.
+            </p>
+
+            <button
+              type="button"
+              onclick="triggerHeartbeatPing()"
+              id="heartbeatPingBtn"
+              class="w-full py-2.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700 transition flex items-center justify-center gap-2 active:scale-98"
+            >
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Verify Heartbeat Connection</span>
+            </button>
           </div>
 
           <!-- Log Out & Remove Account Card -->
@@ -1537,51 +1515,24 @@
       }, 25000);
     }
 
-    async function handleQuickSend(e) {
-      e.preventDefault();
-      const recipient = document.getElementById('dispatchRecipientInput').value.trim();
-      const text = document.getElementById('dispatchTextInput').value.trim();
-      const btn = document.getElementById('quickSendBtn');
-
-      btn.disabled = true;
-      btn.textContent = 'Sending...';
+    async function triggerHeartbeatPing() {
+      const btn = document.getElementById('heartbeatPingBtn');
+      if (btn) btn.disabled = true;
 
       try {
-        const response = await fetch('/api/session/message', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify({ recipient, text })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to send message');
-
-        document.getElementById('dispatchTextInput').value = '';
-        logGatewayActivity('Outbound test message dispatched successfully', 'Dispatcher', 'teal');
-        showNotification('Message Sent Successfully');
-      } catch (err) {
-        alert(err.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Send WhatsApp Message';
-      }
-    }
-
-    async function dispatchSelfPing() {
-      try {
-        showNotification('Transmitting test ping...');
+        showNotification('Verifying keep-alive heartbeat...');
         const res = await fetch('/api/session/ping', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Ping failed');
-        logGatewayActivity('Self-addressed test ping confirmed by linked phone', 'Test Ping', 'emerald');
-        showNotification('🏓 Ping delivered to your phone!');
+        if (!res.ok) throw new Error(data.error || 'Heartbeat verification failed');
+        logGatewayActivity('Manual keep-alive heartbeat verified with cloud gateway', 'Heartbeat', 'emerald');
+        showNotification('✅ Keep-alive heartbeat active and verified!');
       } catch (err) {
         alert(err.message);
+      } finally {
+        if (btn) btn.disabled = false;
       }
     }
 

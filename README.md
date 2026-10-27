@@ -265,12 +265,11 @@ WAKeep exposes clean, rate-limited REST endpoints for developers building person
 | `POST` | `/api/auth/login` | ❌ None (Rate-limited) | Verifies Admin PIN with constant-time equality and issues JWT |
 | `GET` | `/api/auth/verify` | 🔑 Bearer Token | Verifies token validity |
 | `GET` | `/api/session/status` | 🔑 Admin Auth | Returns uptime, RAM usage, and WhatsApp connection status |
-| `POST` | `/api/session/pair` | 🔑 Admin Auth | Requests 8-digit pairing code for an international phone number |
-| `POST` | `/api/session/message` | 🔑 Admin Auth | Dispatches an outgoing message to any phone number or JID |
-| `POST` | `/api/session/ping` | 🔑 Admin Auth | Sends an automated self-addressed latency ping to linked phone |
-| `POST` | `/api/session/logout` | 🔑 Admin Auth | Unlinks WhatsApp device and purges all credentials from server |
-| `POST` | `/api/session/reset` | 🔑 Admin Auth | Clears the encrypted Supabase vault to prepare for fresh scan |
-| `GET` | `/api/session/messages` | 🔑 Admin Auth | Returns empty list (Zero Data Collection: No chat messages stored) |
+| `POST` | `/api/session/pair` | 🔑 Bearer Auth | Requests 8-digit pairing code for an international phone number |
+| `POST` | `/api/session/ping` | 🔑 Bearer Auth | Verifies 24/7 keep-alive connection & server telemetry |
+| `POST` | `/api/session/logout` | 🔑 Bearer Auth | Unlinks WhatsApp device and purges all credentials from server |
+| `POST` | `/api/session/reset` | 🔑 Bearer Auth | Clears the encrypted Supabase vault to prepare for fresh scan |
+| `GET` | `/api/session/messages` | 🔑 Bearer Auth | Returns empty list (Zero Data Collection: No chat messages stored) |
 
 ---
 
