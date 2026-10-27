@@ -175,7 +175,7 @@ EXECUTE FUNCTION prune_old_wa_messages();
 | `SUPABASE_URL` | `https://your-id.supabase.co` | From Supabase Project Settings |
 | `SUPABASE_KEY` | `eyJhbGciOi...` | Supabase **service_role** secret key |
 | `VAULT_SECRET_KEY` | `64-character hex key` | 32-byte AES key (see generator below) |
-| `ADMIN_PIN` | `Choose your secret PIN (e.g. 7842)` | Your personal secret dashboard unlock PIN |
+| `ADMIN_PASSWORD` | `YourSecret#2026` | Mandatory 8+ character password to unlock dashboard |
 | `JWT_SECRET` | `random_secret_phrase_here` | Any long random string |
 
 > [!TIP]
@@ -247,7 +247,7 @@ We designed WAKeep around strict privacy and legal compliance principles:
 
 <details>
 <summary><strong>5. How is my console secured against unauthorized visitors?</strong></summary>
-<p>Every WAKeep instance is protected by your personal secret <code>ADMIN_PIN</code> with built-in rate-limiting (maximum 15 attempts per 15 minutes to prevent brute-force attacks) and constant-time cryptographic verification (<code>crypto.timingSafeEqual</code>). You can configure or change your PIN anytime in your Render dashboard under the <strong>Environment</strong> tab.</p>
+<p>Every WAKeep instance is protected by a mandatory 8+ character password (<code>ADMIN_PASSWORD</code>) with built-in rate-limiting (maximum 15 attempts per 15 minutes to block brute-force attacks) and constant-time cryptographic verification (<code>crypto.timingSafeEqual</code>). You can configure your secret password anytime in your Render dashboard under the <strong>Environment</strong> tab.</p>
 </details>
 
 ---

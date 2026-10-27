@@ -28,7 +28,13 @@ app.set('trust proxy', 1);
 // Environment & Secret Hardening
 // ----------------------------------------------------------------------------
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const ADMIN_PIN = process.env.ADMIN_PIN || '4928';
+
+// Mandatory 8-character minimum admin password (supports ADMIN_PASSWORD or legacy ADMIN_PIN)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.ADMIN_PIN || 'wakeep#2026';
+
+if (ADMIN_PASSWORD.length < 8) {
+  console.warn(`⚠️ [Security Alert] Configured ADMIN_PASSWORD is too short (${ADMIN_PASSWORD.length} chars). Mandatory minimum is 8 characters!`);
+}
 
 // Prevent insecure public fallback secrets in production environments
 let JWT_SECRET = process.env.JWT_SECRET;
@@ -41,8 +47,8 @@ if (!JWT_SECRET) {
   }
 }
 
-if (process.env.NODE_ENV === 'production' && ADMIN_PIN === '4928') {
-  console.warn('⚠️ [Security Notice] Using default ADMIN_PIN (4928). Consider setting a unique ADMIN_PIN in your Render environment variables.');
+if (process.env.NODE_ENV === 'production' && ADMIN_PASSWORD === 'wakeep#2026') {
+  console.warn('⚠️ [Security Notice] Using default ADMIN_PASSWORD. Please set your own unique 8+ character ADMIN_PASSWORD in your Render environment variables.');
 }
 
 const VAULT_SECRET_KEY = process.env.VAULT_SECRET_KEY || 'e83b4f6a1c890d2e5a7b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f';
@@ -185,19 +191,25 @@ app.get('/api/health', (_req: Request, res: Response) => {
 // Authentication Endpoints (Constant-Time Verification)
 // ----------------------------------------------------------------------------
 app.post('/api/auth/login', loginRateLimiter, (req: Request, res: Response) => {
-  const { pin } = req.body;
+  const rawInput = req.body.password || req.body.pin;
 
-  if (!pin) {
-    res.status(400).json({ error: 'PIN is required.' });
+  if (!rawInput) {
+    res.status(400).json({ error: 'Password is required.' });
+    return;
+  }
+
+  const password = String(rawInput).trim();
+  if (password.length < 8) {
+    res.status(400).json({ error: 'Password must be at least 8 characters long.' });
     return;
   }
 
   // Constant-time comparison using SHA-256 to prevent timing side-channel attacks
-  const pinBuffer = crypto.createHash('sha256').update(String(pin).trim()).digest();
-  const expectedBuffer = crypto.createHash('sha256').update(String(ADMIN_PIN).trim()).digest();
+  const inputBuffer = crypto.createHash('sha256').update(password).digest();
+  const expectedBuffer = crypto.createHash('sha256').update(String(ADMIN_PASSWORD).trim()).digest();
 
-  if (!crypto.timingSafeEqual(pinBuffer, expectedBuffer)) {
-    res.status(401).json({ error: 'Invalid PIN. Access denied.' });
+  if (!crypto.timingSafeEqual(inputBuffer, expectedBuffer)) {
+    res.status(401).json({ error: 'Invalid password. Access denied.' });
     return;
   }
 
