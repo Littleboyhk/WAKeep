@@ -51,23 +51,45 @@
       mask-image: radial-gradient(circle at 50% 20%, black 60%, transparent 98%);
       -webkit-mask-image: radial-gradient(circle at 50% 20%, black 60%, transparent 98%);
     }
-    /* Sleek Scrollbars */
+    /* Sleek Modern Scrollbars (Vertical Only) */
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 0px;
+    }
+    ::-webkit-scrollbar:horizontal {
+      height: 0px !important;
+      width: 0px !important;
+      display: none !important;
     }
     ::-webkit-scrollbar-track {
       background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: rgba(148, 163, 184, 0.4);
       border-radius: 9999px;
+      transition: background 0.2s ease;
     }
     .dark ::-webkit-scrollbar-thumb {
-      background: #334155;
+      background: rgba(71, 85, 105, 0.45);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #10b981;
+      background: rgba(16, 185, 129, 0.7);
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: rgba(52, 211, 153, 0.7);
+    }
+
+    /* Cross-browser Scrollbar Suppression Utility */
+    .no-scrollbar::-webkit-scrollbar,
+    .scrollbar-none::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    .no-scrollbar,
+    .scrollbar-none {
+      -ms-overflow-style: none !important;
+      scrollbar-width: none !important;
     }
   </style>
 </head>
@@ -633,15 +655,15 @@
         </button>
       </div>
 
-      <!-- Tab Buttons -->
-      <div class="flex overflow-x-auto border-b border-slate-100 dark:border-slate-800 px-6 pt-2 bg-white dark:bg-[#0c121e] text-xs font-semibold scrollbar-none">
+      <!-- Tab Buttons (No Scrollbar) -->
+      <div class="flex overflow-x-auto border-b border-slate-100 dark:border-slate-800 px-6 pt-2 bg-white dark:bg-[#0c121e] text-xs font-semibold scrollbar-none no-scrollbar">
         <button
           type="button"
           id="legalTabPrivacyBtn"
           onclick="switchLegalTab('privacy')"
-          class="px-4 py-2.5 border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 transition whitespace-nowrap"
+          class="px-4 py-2.5 border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 transition whitespace-nowrap font-bold"
         >
-          Privacy Policy (Zero Data Collection)
+          Privacy Policy
         </button>
         <button
           type="button"
@@ -657,7 +679,7 @@
           onclick="switchLegalTab('compliance')"
           class="px-4 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition whitespace-nowrap"
         >
-          Indian IT & DoT Compliance
+          DoT & IT Compliance
         </button>
         <button
           type="button"
@@ -665,7 +687,7 @@
           onclick="switchLegalTab('disclaimer')"
           class="px-4 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition whitespace-nowrap"
         >
-          Disclaimer & Trademarks
+          Disclaimers
         </button>
       </div>
 
