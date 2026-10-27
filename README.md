@@ -263,7 +263,9 @@ WAKeep exposes clean, rate-limited REST endpoints for developers building person
 | Method | Endpoint | Auth Required | Purpose |
 |---|---|---|---|
 | `GET` | `/api/health` | ❌ None (Public) | Keep-alive heartbeat & RAM monitor |
-| `POST` | `/api/auth/login` | ❌ None (Rate-limited) | Verifies Admin PIN with constant-time equality and issues JWT |
+| `GET` | `/api/slots` | ❌ None (Public) | Returns live companion capacity and available slots |
+| `POST` | `/api/sessions/create` | ❌ None (Rate-limited) | Creates a dedicated user session with disclaimer acceptance |
+| `POST` | `/api/sessions/login` | ❌ None (Rate-limited) | Verifies session password with constant-time equality and issues JWT |
 | `GET` | `/api/auth/verify` | 🔑 Bearer Token | Verifies token validity |
 | `GET` | `/api/session/status` | 🔑 Admin Auth | Returns uptime, RAM usage, and WhatsApp connection status |
 | `POST` | `/api/session/pair` | 🔑 Bearer Auth | Requests 8-digit pairing code for an international phone number |
@@ -271,6 +273,15 @@ WAKeep exposes clean, rate-limited REST endpoints for developers building person
 | `POST` | `/api/session/logout` | 🔑 Bearer Auth | Unlinks WhatsApp device and purges all credentials from server |
 | `POST` | `/api/session/reset` | 🔑 Bearer Auth | Clears the encrypted Supabase vault to prepare for fresh scan |
 | `GET` | `/api/session/messages` | 🔑 Bearer Auth | Returns empty list (Zero Data Collection: No chat messages stored) |
+
+---
+
+## 📬 Contact & Grievance Support (India IT Rules 2021)
+
+For support, feedback, legal compliance, or vulnerability reports:
+- **Contact & Grievance Officer:** Harry Krishnan
+- **Email:** [harrykrishnan7@gmail.com](mailto:harrykrishnan7@gmail.com)
+- **Jurisdiction:** Republic of India
 
 ---
 

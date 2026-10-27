@@ -218,6 +218,18 @@
     <!-- ======================================================================= -->
     <div id="heroLockCard" class="mt-8 sm:mt-10 max-w-xl mx-auto w-full px-2">
       
+      <!-- Real-Time Server Slots Badge (Real Backend Checked) -->
+      <div id="slotsCapacityBanner" class="mb-4 p-3 sm:p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-sm flex items-center justify-between text-xs backdrop-blur">
+        <div class="flex items-center gap-2.5">
+          <span id="slotsDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+          <span class="font-bold text-slate-700 dark:text-slate-300">Server Capacity:</span>
+          <span id="slotsCountBadge" class="font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs">
+            Checking live slots...
+          </span>
+        </div>
+        <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Backend Verified</span>
+      </div>
+
       <!-- Session Hub Mode Switcher -->
       <div class="flex justify-center mb-4">
         <div class="inline-flex p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-inner">
@@ -298,6 +310,23 @@
               onkeydown="if(event.key === 'Enter') handleCreateSessionSubmit()"
             />
           </div>
+        </div>
+
+        <!-- Mandatory Legal & Compliance Disclaimer Checkbox -->
+        <div class="pt-1 text-left">
+          <label class="flex items-start gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              id="disclaimerCheckbox"
+              class="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 cursor-pointer shrink-0"
+            />
+            <span class="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+              I acknowledge that WAKeep is an independent companion tool (not affiliated with Meta/WhatsApp) and agree to the 
+              <button type="button" onclick="openLegalModal('terms')" class="text-emerald-600 dark:text-emerald-400 underline font-semibold hover:text-emerald-500">Terms of Service</button> &amp; 
+              <button type="button" onclick="openLegalModal('privacy')" class="text-emerald-600 dark:text-emerald-400 underline font-semibold hover:text-emerald-500">Privacy Policy</button>. 
+              I confirm I will not use this tool for bulk spamming or unlawful activities.
+            </span>
+          </label>
         </div>
 
         <div id="createSessionError" class="text-xs text-rose-500 font-medium hidden"></div>
@@ -876,23 +905,26 @@
       <!-- Legal Modal Triggers -->
       <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-medium">
         <button type="button" onclick="openLegalModal('privacy')" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline-offset-4 hover:underline">
-          Privacy Policy (Zero Data Collection)
+          Privacy Policy
         </button>
         <button type="button" onclick="openLegalModal('terms')" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline-offset-4 hover:underline">
           Terms of Service
         </button>
         <button type="button" onclick="openLegalModal('compliance')" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline-offset-4 hover:underline">
-          Indian IT & DoT Compliance
+          Indian IT Compliance
         </button>
         <button type="button" onclick="openLegalModal('disclaimer')" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline-offset-4 hover:underline">
           Disclaimer
         </button>
       </div>
 
-      <!-- Architecture Badge -->
-      <p class="font-mono text-[11px] text-slate-400 dark:text-slate-500">
-        DPDP Act 2023 Compliant &bull; Self-Hosted
-      </p>
+      <!-- Contact Email & Grievance Support -->
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-slate-400">Grievance &amp; Contact:</span>
+        <a href="mailto:harrykrishnan7@gmail.com" class="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+          harrykrishnan7@gmail.com
+        </a>
+      </div>
 
     </div>
   </footer>
@@ -1064,6 +1096,16 @@
             <p>
               WAKeep is software, not a service provider or intermediary. The software author does not transmit, receive, or store third-party content. All transmission occurs directly between the user's personal deployment and WhatsApp's official multi-device gateway servers.
             </p>
+
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-2">4. Grievance Officer &amp; Support Contact (IT Rules, 2021)</h4>
+            <p>
+              In accordance with Rule 3(2) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, the designated contact for all legal, compliance, and user inquiries is:
+            </p>
+            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] space-y-1">
+              <div><strong>Name / Role:</strong> Grievance &amp; Compliance Officer</div>
+              <div><strong>Contact Email:</strong> <a href="mailto:harrykrishnan7@gmail.com" class="text-emerald-600 dark:text-emerald-400 underline">harrykrishnan7@gmail.com</a></div>
+              <div><strong>Jurisdiction:</strong> India</div>
+            </div>
           </div>
         </div>
 
@@ -1135,7 +1177,47 @@
 
       startUptimeClock();
       await verifyAuthentication();
+      updateServerSlots();
+      setInterval(updateServerSlots, 15000);
     });
+
+    async function updateServerSlots() {
+      try {
+        const res = await fetch('/api/slots');
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('slotsCountBadge');
+        const dot = document.getElementById('slotsDot');
+        const createBtn = document.getElementById('createSessionBtn');
+        if (badge) {
+          badge.textContent = `${data.slotsRemaining} of ${data.totalSlots} Slots Available`;
+          if (data.slotsRemaining <= 0) {
+            badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs';
+            if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0';
+            if (createBtn) {
+              createBtn.disabled = true;
+              createBtn.innerHTML = '<span>Server Capacity Full (0 Slots Left)</span>';
+            }
+          } else if (data.slotsRemaining <= 2) {
+            badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs';
+            if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0';
+            if (createBtn && createBtn.disabled && createBtn.textContent.includes('Full')) {
+              createBtn.disabled = false;
+              createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+            }
+          } else {
+            badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs';
+            if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0';
+            if (createBtn && createBtn.disabled && createBtn.textContent.includes('Full')) {
+              createBtn.disabled = false;
+              createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Slots check warning:', err);
+      }
+    }
 
     function toggleTheme() {
       const isDark = document.documentElement.classList.toggle('dark');
@@ -1181,12 +1263,13 @@
     async function handleCreateSessionSubmit() {
       const sessionId = document.getElementById('createSessionNameInput').value.trim();
       const password = document.getElementById('createSessionPasswordInput').value.trim();
+      const disclaimerAccepted = document.getElementById('disclaimerCheckbox')?.checked;
       const errEl = document.getElementById('createSessionError');
       const btn = document.getElementById('createSessionBtn');
 
       errEl.classList.add('hidden');
       if (!sessionId) {
-        errEl.textContent = 'Please enter a Session Name or your Phone Number.';
+        errEl.textContent = 'Please enter a Session Nickname (e.g. my_laptop).';
         errEl.classList.remove('hidden');
         return;
       }
@@ -1197,14 +1280,20 @@
         return;
       }
 
+      if (!disclaimerAccepted) {
+        errEl.textContent = 'Please check the disclaimer box agreeing to the Terms of Service before generating your QR code.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
       btn.disabled = true;
-      btn.innerHTML = '<span>Initializing Session...</span>';
+      btn.innerHTML = '<span>Checking Server Slots &amp; Initializing...</span>';
 
       try {
         const response = await fetch('/api/sessions/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, password })
+          body: JSON.stringify({ sessionId, password, disclaimerAccepted: true })
         });
         const data = await response.json();
 
@@ -1220,6 +1309,7 @@
         showUnlockedDashboard();
         connectSocket();
         await loadStatus();
+        updateServerSlots();
         showNotification('New session active! Please scan QR code to link.');
       } catch (err) {
         errEl.textContent = err.message;
@@ -1585,6 +1675,7 @@
         }
         if (heartbeatIntervalTimer) clearInterval(heartbeatIntervalTimer);
         showLockedHero();
+        updateServerSlots();
       } catch (err) {
         alert(err.message);
       }

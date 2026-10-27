@@ -197,15 +197,45 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------------------------------
-// Multi-Session Hub Endpoints (Create New Session & Login to Existing)
+// Multi-Session Hub Endpoints (Capacity Slots, Create New Session & Login)
 // ----------------------------------------------------------------------------
+
+/**
+ * GET /api/slots
+ * Returns real server capacity and currently available companion slots based on active sessions
+ */
+app.get('/api/slots', (_req: Request, res: Response) => {
+  const maxSlots = parseInt(process.env.MAX_COMPANION_SLOTS || '10', 10);
+  const activeSessions = sessionManager.getActiveSessionsCount();
+  const slotsRemaining = Math.max(0, maxSlots - activeSessions);
+  res.json({
+    totalSlots: maxSlots,
+    activeSessions,
+    slotsRemaining,
+    isFull: slotsRemaining <= 0
+  });
+});
 
 /**
  * POST /api/sessions/create
  * Allows any new user to create their own session and get a fresh, dedicated QR code
  */
 app.post('/api/sessions/create', loginRateLimiter, async (req: Request, res: Response) => {
-  const { sessionId, password } = req.body;
+  const { sessionId, password, disclaimerAccepted } = req.body;
+
+  if (!disclaimerAccepted) {
+    res.status(400).json({ error: 'You must review and agree to the Disclaimer & Terms of Service before generating a QR code.' });
+    return;
+  }
+
+  const maxSlots = parseInt(process.env.MAX_COMPANION_SLOTS || '10', 10);
+  const activeSessions = sessionManager.getActiveSessionsCount();
+  if (activeSessions >= maxSlots) {
+    res.status(503).json({
+      error: `All ${maxSlots} companion slots on this server are currently occupied (${activeSessions}/${maxSlots} active). Please wait for a slot to free up or deploy your own free private instance using GitHub.`
+    });
+    return;
+  }
 
   if (!sessionId || !password) {
     res.status(400).json({ error: 'Session Name and Password (minimum 8 characters) are required.' });
