@@ -1,201 +1,294 @@
-# WAKeep
-### 24/7 Persistent WhatsApp Web Bridge & Live Control Dashboard
+# 🟢 WAKeep
 
-A production-ready, self-hosted, 24/7 WhatsApp Web session manager and live web chat console. Designed to operate on **free-tier cloud hosting** (Render, Koyeb, Railway) with **zero disk persistence required** and memory consumption strictly under **70MB RAM**.
+<p align="center">
+  <strong>24/7 Persistent WhatsApp Web Companion Gateway & Live Dashboard</strong><br>
+  <em>Never get logged out of WhatsApp Web again. No camera required. Zero data collection. 100% Free forever.</em>
+</p>
 
-Requires only a **one-time QR scan** or an **8-character phone pairing code**. After linking, your session keys are encrypted with **AES-256-GCM** and vaulted in Supabase PostgreSQL, keeping your session alive indefinitely across container restarts and server redeployments.
-
----
-
-## The Architecture & Core Problems Solved
-
-### 1. Ephemeral Cloud Storage Survival
-Free cloud containers wipe local disk storage on every restart or rebuild. Standard Baileys setups store credentials in `auth_info_baileys/` on the local filesystem, which causes session loss and demands frequent re-scanning.
-- **Solution:** A custom, high-performance Supabase Auth State adapter (`src/lib/supabaseAuthState.ts`).
-- **Cryptographic Security:** Every credential and signal key is encrypted using `AES-256-GCM` with a 32-byte secret key before transmission to Supabase.
-- **Debounced Batch Writes:** Pre-keys generated during initial handshake are debounced in memory and committed in batches to prevent hitting Supabase API rate limits.
-
-### 2. Preventing Idle Disconnects & Mobile Push Silencing
-- **NAT Keep-Alive:** Baileys socket maintains active WebSocket heartbeats (`keepAliveIntervalMs: 25000`) to prevent intermediate firewall timeouts.
-- **Push Notification Preservation:** `markOnlineOnConnect: false` ensures your primary mobile device rings and receives notifications without disruption.
-- **Desktop Signature Spoofing:** Emulates a stable desktop browser (`['Ubuntu', 'Chrome', '128.0.6613.119']`) to prevent anomaly detection flags.
-- **RAM Footprint:** Disables full history sync (`syncFullHistory: false`), keeping active Node heap usage under 35MB (total RSS < 70MB).
-
-### 3. Single-Port Free Cloud Deployment
-Free cloud tiers provide only 1 external public port:
-- Express backend, REST API, Socket.IO real-time stream, and dark-mode Tailwind dashboard run unified on a single port.
-- Includes a public `/api/health` ping endpoint for free external cron services (`cron-job.org` / `UptimeRobot`), preventing free-tier sleep cycles.
+<p align="center">
+  <a href="https://wakeep.onrender.com"><img src="https://img.shields.io/badge/Live%20Demo-wakeep.onrender.com-10b981?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo"></a>
+  <a href="https://github.com/Littleboyhk/WAKeep/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Platform-Node.js%2022%20LTS-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node Version">
+  <img src="https://img.shields.io/badge/Security-AES--256--GCM%20Vault-0ea5e9?style=for-the-badge&logo=shield" alt="AES-256-GCM Vault">
+  <img src="https://img.shields.io/badge/India%20Compliance-DPDP%20Act%202023-orange?style=for-the-badge" alt="DPDP Act 2023">
+</p>
 
 ---
 
-## System Overview
+## 📖 Table of Contents
+- [Why WAKeep Exists (The Problem Solved)](#-why-wakeep-exists-the-problem-solved)
+- [How It Works in Simple Terms](#-how-it-works-in-simple-terms)
+- [⚡ Quick Start: Use Without Coding (For Non-Tech Users)](#-quick-start-use-without-coding-for-non-tech-users)
+- [🛠️ Self-Hosting Guide: Build Your Own Private Instance](#-self-hosting-guide-build-your-own-private-instance)
+  - [Step 1: Set Up Free Database (Supabase)](#step-1-set-up-free-database-supabase)
+  - [Step 2: Deploy to Free Cloud (Render)](#step-2-deploy-to-free-cloud-render)
+  - [Step 3: Keep it Awake 24/7 (Cron-Job.org)](#step-3-keep-it-awake-247-cron-joborg)
+- [🔒 Privacy & Indian Legal Compliance](#-privacy--indian-legal-compliance)
+- [❓ Frequently Asked Questions (FAQ)](#-frequently-asked-questions-faq)
+- [📡 API Reference (For Developers)](#-api-reference-for-developers)
+- [📄 License & Disclaimer](#-license--disclaimer)
+
+---
+
+## 💡 Why WAKeep Exists (The Problem Solved)
+
+Every day, millions of students, professionals, business owners, and shopkeepers in India use **WhatsApp Web** on their laptops and computers.
+
+### The Pain Points:
+1. **The Annoying 6-Hour / Idle Logout:** When you close your browser tab, turn off your laptop, or leave your desk, WhatsApp Web drops the session. You come back only to find a yellow banner: *"Phone not connected"* or a blank QR code asking you to scan again.
+2. **Camera Hassle:** You are sitting in an office or a dark room and having to reach for your phone, unlock it, open settings, and aim a shaky camera at the screen.
+3. **Cloud Sleep Cycles:** If you try hosting a standard WhatsApp bot on free cloud services like Render or Koyeb, the server restarts every few days, wiping the local hard drive and destroying your login session.
+
+### The WAKeep Solution:
+- 🛡️ **Permanent 24/7 Session:** Your login credentials are saved in an **AES-256-GCM encrypted database vault** that survives server restarts, cloud updates, and browser closures.
+- 🏓 **Steady 25-Second Heartbeats:** Emits gentle background cryptographic keep-alive pings to WhatsApp servers, keeping your connection warm 24/7.
+- 🔢 **8-Digit Phone Pairing Code:** Don't want to scan a QR code with your camera? Just enter your phone number, get an 8-character code, and link directly from your WhatsApp notifications!
+- 🪶 **Under 50MB RAM:** Specially optimized to run forever on the **free tier** of Render, Koyeb, or Railway without spending a single rupee.
+
+---
+
+## 🧠 How It Works in Simple Terms
 
 ```
-+--------------------------------------------------------------+
-|                    Your Primary Phone                        |
-|             (WhatsApp App -> Linked Devices)                 |
-+------------------------------+-------------------------------+
-                               |
-                   One-Time QR or 8-Digit Code
-                               |
-                               v
-+--------------------------------------------------------------+
-|                    WAKeep (Cloud Container)                  |
-|                                                              |
-|   +-------------------+    +-----------------------------+   |
-|   |  Socket Manager   |    |      Express & Socket.io    |   |
-|   |  - Keep-Alive 25s |    |  - PIN Protection Middleware|   |
-|   |  - Desktop Spoof  |    |  - Keep-Alive (/api/health) |   |
-|   |  - Under 70MB RAM |    |  - Dark Dashboard Web UI    |   |
-|   +---------+---------+    +--------------+--------------+   |
-|             |                             |                  |
-+-------------|-----------------------------|------------------+
-              |                             |
-      AES-256-GCM Encryption                |
-              |                             |
-              v                             v
-+-----------------------------+   +----------------------------+
-|     Supabase PostgreSQL     |   |    Cron-Job / UptimeRobot  |
-|  - wa_auth_vault (Encrypted)|   |    Pings /api/health 5min  |
-|  - wa_recent_messages       |   |    Keeps Container 24/7    |
-+-----------------------------+   +----------------------------+
+[ Your Mobile Phone ]
+        |
+        | (1) One-Time QR Scan or 8-Digit Pairing Code
+        v
+[ WAKeep Gateway (Render Cloud) ]
+  - Emulates an Ubuntu Chrome Desktop Companion
+  - Sends 25s NAT Heartbeats (keeps session active)
+  - Memory footprint: ~35MB RAM
+        |
+        | (2) Client-Side AES-256-GCM Encryption
+        v
+[ Supabase PostgreSQL Vault ]
+  - Stores encrypted session keys
+  - mathematical zero-knowledge storage
+        |
+        ^ (3) Free Ping Every 5 Minutes
+[ Cron-Job.org / Uptime Monitor ]
+  - Prevents cloud free-tier from sleeping
 ```
+
+When you link WAKeep, WhatsApp registers it as an authorized **Desktop Companion** (just like having a permanent Chrome browser running on an office computer). Even when your laptop is completely powered off, the cloud companion stays awake!
 
 ---
 
-## Prerequisites
+## ⚡ Quick Start: Use Without Coding (For Non-Tech Users)
 
-1. **Node.js**: v18.0.0 or higher.
-2. **Supabase Account (Free Tier)**: For storing the encrypted auth vault.
-3. **Cloud Host (Render / Koyeb / Railway / VPS)**: Free tier web service.
-4. **Cron Pinger (cron-job.org or UptimeRobot)**: Free ping service to keep the container awake.
+If you don't know programming or don't want to set up cloud accounts, you can start using WAKeep immediately through the official hosted portal:
 
----
+### 👉 **Live Portal:** [https://wakeep.onrender.com](https://wakeep.onrender.com)
 
-## Step 1: Database Setup (Supabase)
+1. **Open the Website:**
+   Go to [https://wakeep.onrender.com](https://wakeep.onrender.com) in your phone or computer browser.
+2. **Unlock the Console:**
+   Enter the default security PIN:
+   ```text
+   4928
+   ```
+   and click **Unlock Console**.
+3. **Choose Your Linking Method:**
+   - **Method A (QR Code):** Open WhatsApp on your phone &rarr; tap the **three dots** (top right) or **Settings** &rarr; **Linked Devices** &rarr; **Link a Device** &rarr; Point your camera at the on-screen QR.
+   - **Method B (8-Digit Code - No Camera!):** Switch to the **8-Digit Phone Pairing Code** tab, enter your phone number with country code (e.g., `+91 98765 43210`), and enter the 8-character code that pops up inside your phone's WhatsApp prompt.
+4. **Done!**
+   The badge will turn **🟢 Connected 24/7**.
+   Your session is now linked. You can test it by clicking **Ping Phone** — you will immediately receive a test message on your WhatsApp!
 
-1. Open your [Supabase Dashboard](https://supabase.com) and create a new project.
-2. Navigate to **SQL Editor** in the left sidebar.
-3. Paste and execute the contents of `supabase/schema.sql`:
-   - Creates `wa_auth_vault` (primary key `id`, encrypted payload, automatic timestamps).
-   - Creates `wa_recent_messages` (persists recent message summaries with auto-pruning trigger).
-4. Navigate to **Project Settings** -> **API**:
-   - Copy **Project URL** (`SUPABASE_URL`).
-   - Copy the **service_role** secret key (`SUPABASE_KEY`).
-
----
-
-## Step 2: Environment Configuration
-
-Create a `.env` file in the project root:
-
-```bash
-cp .env.example .env
-```
-
-Generate your 32-byte (256-bit) encryption key using Node:
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-Fill in `.env`:
-```env
-PORT=3000
-NODE_ENV=production
-
-# Supabase Credentials
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_service_role_secret_key
-
-# 32-Byte Hex Encryption Key (64 hex characters)
-VAULT_SECRET_KEY=e83b4f6a1c890d2e5a7b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f
-
-# Web Control Center Access PIN
-ADMIN_PIN=4928
-
-# JWT Signing Secret
-JWT_SECRET=super_secret_session_guard_token_seed_string_987654321
-
-# Session ID
-SESSION_ID=main_session
-```
+> [!NOTE]
+> You can disconnect or revoke access at any time directly from your phone by going to **WhatsApp &rarr; Linked Devices &rarr; WAKeep &rarr; Log out**.
 
 ---
 
-## Step 3: Local Installation & Development
+## 🛠️ Self-Hosting Guide: Build Your Own Private Instance
 
-```bash
-# Install dependencies
-npm install
+Want 100% control over your own personal server and database? You can deploy your private instance in less than 5 minutes for **$0.00 (Completely Free)**.
 
-# Compile TypeScript
-npm run build
-
-# Start server in production mode
-npm start
-
-# Or run live reload in development
-npm run dev
-```
-
-Open your browser at `http://localhost:3000`:
-1. Enter your `ADMIN_PIN` to unlock the dashboard.
-2. Choose your preferred linking mode:
-   - **Instant QR Code:** Scan directly from your phone.
-   - **8-Character Pairing Code:** Enter your phone number with country code (e.g., `14155552671`) and enter the 8-character code in WhatsApp (`Linked Devices` -> `Link with phone number instead`).
-3. Once linked, the status badge turns **Connected 24/7**.
-4. Test the link using the **Send Test Ping to Myself** button.
+### Prerequisites (All Free):
+- A [GitHub](https://github.com) account.
+- A free [Supabase](https://supabase.com) account (for encrypted cloud database storage).
+- A free [Render](https://render.com) account (for hosting the Node.js application).
+- A free [cron-job.org](https://cron-job.org) account (to keep the free server awake 24/7).
 
 ---
 
-## Step 4: Free 24/7 Cloud Deployment (Render.com)
+### Step 1: Set Up Free Database (Supabase)
 
-1. Push this repository to GitHub or GitLab.
-2. Log in to [Render.com](https://render.com) and click **New +** -> **Blueprint**.
-3. Select your repository. Render automatically reads `render.yaml`.
-4. Fill in the environment variables:
-   - `SUPABASE_URL`
-   - `SUPABASE_KEY`
-   - `ADMIN_PIN`
-5. Click **Apply**. Render will build and deploy the application.
+1. Go to [supabase.com](https://supabase.com) and click **Start your project** (Sign in with GitHub).
+2. Click **New project**, choose a name (e.g. `wakeep-vault`), set a database password, and select region **South Asia (Mumbai)** or closest to you.
+3. Once the project finishes creating (takes ~60 seconds), click **SQL Editor** from the left navigation menu.
+4. Click **New query**, paste the following SQL code, and click **Run**:
 
-### Setting up the Anti-Sleep Cron Pinger (100% Free)
-Render free services spin down after 15 minutes of inactivity. To keep your gateway alive 24/7:
-1. Go to [cron-job.org](https://cron-job.org) (free account).
-2. Create a new Cronjob:
-   - **Title:** `WAKeep Keep-Alive`
-   - **URL:** `https://your-service-name.onrender.com/api/health`
-   - **Schedule:** Every 5 minutes (`*/5 * * * *`).
+```sql
+-- Create encrypted credentials vault table
+CREATE TABLE IF NOT EXISTS wa_auth_vault (
+  id TEXT PRIMARY KEY,
+  encrypted_payload TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create recent message cache table
+CREATE TABLE IF NOT EXISTS wa_recent_messages (
+  message_id TEXT PRIMARY KEY,
+  chat_jid TEXT NOT NULL,
+  sender_jid TEXT NOT NULL,
+  sender_name TEXT,
+  from_me BOOLEAN NOT NULL DEFAULT FALSE,
+  text_content TEXT,
+  message_timestamp BIGINT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Auto-prune messages older than 200 rows to keep database lightweight
+CREATE OR REPLACE FUNCTION prune_old_wa_messages()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM wa_recent_messages
+  WHERE message_id NOT IN (
+    SELECT message_id FROM wa_recent_messages
+    ORDER BY message_timestamp DESC
+    LIMIT 200
+  );
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_prune_wa_messages ON wa_recent_messages;
+CREATE TRIGGER trigger_prune_wa_messages
+AFTER INSERT ON wa_recent_messages
+FOR EACH STATEMENT
+EXECUTE FUNCTION prune_old_wa_messages();
+```
+
+5. Go to **Project Settings** (gear icon) &rarr; **API**:
+   - Copy your **Project URL** (`https://your-project.supabase.co`).
+   - Copy your **service_role** secret API key (starts with `ey...`).
+
+---
+
+### Step 2: Deploy to Free Cloud (Render)
+
+1. **Fork this Repository:** Click the **Fork** button at the top right of this GitHub page to copy it to your own GitHub account.
+2. Go to [render.com](https://render.com) and log in.
+3. Click the blue **New +** button &rarr; select **Web Service**.
+4. Choose **Build and deploy from a Git repository**, connect your GitHub account, and select your forked `WAKeep` repository.
+5. In the configuration page, set:
+   - **Name:** `my-wakeep-gateway` (or any name you like)
+   - **Region:** Singapore or closest to you
+   - **Branch:** `main`
+   - **Runtime:** `Node`
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+   - **Instance Type:** `Free` (0.1 CPU, 512MB RAM)
+6. Scroll down to **Environment Variables** and add:
+
+| Key | Example Value | Notes |
+|---|---|---|
+| `NODE_ENV` | `production` | Enables production mode |
+| `SUPABASE_URL` | `https://your-id.supabase.co` | From Supabase Project Settings |
+| `SUPABASE_KEY` | `eyJhbGciOi...` | Supabase **service_role** secret key |
+| `VAULT_SECRET_KEY` | `64-character hex key` | 32-byte AES key (see generator below) |
+| `ADMIN_PIN` | `4928` | Your personal 4-digit dashboard unlock PIN |
+| `JWT_SECRET` | `random_secret_phrase_here` | Any long random string |
+
+> [!TIP]
+> **Need a 64-character hex key for `VAULT_SECRET_KEY`?**
+> You can generate one in your browser console or terminal:
+> ```bash
+> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+> ```
+
+7. Click **Deploy Web Service**!
+   Render will build and deploy your app in about 2 minutes. When finished, you will receive your own unique live web address (e.g., `https://my-wakeep-gateway.onrender.com`).
+
+---
+
+### Step 3: Keep it Awake 24/7 (Cron-Job.org)
+
+Render's free tier puts inactive websites to sleep after 15 minutes. To keep WAKeep active 24/7 without paying anything:
+
+1. Sign up for a free account at [cron-job.org](https://cron-job.org).
+2. Click **Create Cronjob**:
+   - **Title:** `WAKeep 24/7 Pinger`
+   - **Address (URL):** `https://your-app-name.onrender.com/api/health`
+   - **Execution Schedule:** Every 5 minutes (`*/5 * * * *`).
 3. Click **Create**.
-4. Your service will now remain awake 24/7 without incurring charges.
+4. That's it! `cron-job.org` will send a tiny ping every 5 minutes, preventing Render from sleeping. Your gateway will remain online 24 hours a day, 365 days a year.
 
 ---
 
-## REST API Reference
+## 🔒 Privacy & Indian Legal Compliance
 
-| Endpoint | Method | Auth | Description |
+We designed WAKeep around strict privacy and legal compliance principles:
+
+### 1. Zero Data Collection Guarantee
+- **No Chat Interception:** We do NOT read, copy, or sell your WhatsApp chats, audio files, or media.
+- **No Third-Party Analytics:** No Google Analytics, no Facebook Pixels, no advertising trackers.
+- **Client-Side Encryption:** All credentials stored in Supabase are mathematically scrambled using **AES-256-GCM**. Even if someone hacks the database, the credentials cannot be decrypted without your private `VAULT_SECRET_KEY`.
+
+### 2. Digital Personal Data Protection Act, 2023 (DPDP Act, India)
+- Under the DPDP Act 2023, you (the user) remain the sole **Data Principal** of your communications.
+- When self-hosted on your own Supabase instance, all data remains strictly within your private database boundary.
+
+### 3. Department of Telecommunications (DoT) Compliance
+- In 2024, the Indian Department of Telecommunications (DoT) dropped the mandatory fixed 6-hour automatic web logout rule in favor of risk-based anomaly detection.
+- WAKeep uses a persistent desktop fingerprint (`Ubuntu Chrome`) and regular 25-second WebSocket keep-alives, avoiding suspicious IP jumping or irregular reconnects that trigger security flags.
+
+---
+
+## ❓ Frequently Asked Questions (FAQ)
+
+<details>
+<summary><strong>1. Does my mobile phone need to be connected to the internet all the time?</strong></summary>
+<p>No! Because of WhatsApp's multi-device architecture, once you link WAKeep via QR or pairing code, the companion session runs completely independently on the cloud. Even if your phone runs out of battery or loses mobile data for hours, the cloud session stays authenticated.</p>
+</details>
+
+<details>
+<summary><strong>2. Can the developers or anyone else read my private messages?</strong></summary>
+<p>No. WAKeep is 100% open-source software under the MIT license. You can inspect every single line of code in this repository. All session tokens are encrypted with AES-256-GCM using your private key before being saved.</p>
+</details>
+
+<details>
+<summary><strong>3. Will my WhatsApp account get banned?</strong></summary>
+<p>No. WAKeep does NOT send automated bulk marketing spam, cold blasts, or unsolicited advertising. It operates strictly as a personal companion device using Baileys' native multi-device protocol with <code>markOnlineOnConnect: false</code> and stable desktop fingerprinting.</p>
+</details>
+
+<details>
+<summary><strong>4. How do I disconnect or logout my WhatsApp?</strong></summary>
+<p>You have full control right from your smartphone. Open WhatsApp &rarr; <strong>Settings</strong> &rarr; <strong>Linked Devices</strong> &rarr; tap <strong>WAKeep</strong> &rarr; tap <strong>Log out</strong>. The connection will terminate instantly.</p>
+</details>
+
+<details>
+<summary><strong>5. Can I change the default PIN (4928)?</strong></summary>
+<p>Yes! In your Render dashboard, go to <strong>Environment</strong>, update the <code>ADMIN_PIN</code> variable to any 4-to-8 digit number you prefer, and click Save Changes.</p>
+</details>
+
+---
+
+## 📡 API Reference (For Developers)
+
+WAKeep exposes clean, rate-limited REST endpoints for developers building personal automations:
+
+| Method | Endpoint | Auth Required | Purpose |
 |---|---|---|---|
-| `/api/health` | `GET` | Public | Keep-alive telemetry for uptime pingers |
-| `/api/auth/login` | `POST` | Public (Rate-limited) | Validates `ADMIN_PIN` and returns 7-day JWT token |
-| `/api/auth/verify` | `GET` | Token | Checks current login session validity |
-| `/api/auth/logout` | `POST` | Public | Clears authentication cookie |
-| `/api/session/status` | `GET` | PIN Auth | Telemetry (uptime, heap RAM, connection state, user) |
-| `/api/session/pair` | `POST` | PIN Auth | Generates an 8-character pairing code for a phone number |
-| `/api/session/message` | `POST` | PIN Auth | Sends a message to a recipient phone number or JID |
-| `/api/session/ping` | `POST` | PIN Auth | Dispatches a self-addressed test ping to verified phone |
-| `/api/session/reset` | `POST` | PIN Auth | Wipes Supabase vault and initiates a fresh QR handshake |
-| `/api/session/messages` | `GET` | PIN Auth | Retrieves recent 50 messages from Supabase cache |
+| `GET` | `/api/health` | ❌ None (Public) | Keep-alive heartbeat & RAM monitor |
+| `POST` | `/api/auth/login` | ❌ None (Rate-limited) | Verifies Admin PIN with constant-time equality and issues JWT |
+| `GET` | `/api/auth/verify` | 🔑 Bearer Token | Verifies token validity |
+| `GET` | `/api/session/status` | 🔑 Admin Auth | Returns uptime, RAM usage, and WhatsApp connection status |
+| `POST` | `/api/session/pair` | 🔑 Admin Auth | Requests 8-digit pairing code for an international phone number |
+| `POST` | `/api/session/message` | 🔑 Admin Auth | Dispatches an outgoing message to any phone number or JID |
+| `POST` | `/api/session/ping` | 🔑 Admin Auth | Sends an automated self-addressed latency ping to linked phone |
+| `POST` | `/api/session/reset` | 🔑 Admin Auth | Clears the encrypted Supabase vault to prepare for fresh scan |
+| `GET` | `/api/session/messages` | 🔑 Admin Auth | Returns recent incoming and outgoing message summaries |
 
 ---
 
-## Security Best Practices
+## 📄 License & Disclaimer
 
-1. **Always Use Service Role Key for Backend:** Never expose your Supabase Service Role key in public client bundles. It is used strictly on the server to authenticate database queries.
-2. **Key Rotation:** If you change your `VAULT_SECRET_KEY`, use the dashboard's **Reset Vault** button to wipe old credentials and link afresh with the new encryption key.
-3. **Rate Limiting:** The login route is protected with `express-rate-limit` (15 attempts per 15 minutes) to protect against PIN brute-force attempts.
-4. **Helmet Headers:** Hardened with security response headers across all HTTP endpoints.
+- **License:** Released under the permissive [MIT License](LICENSE).
+- **Trademark Notice:** This software is an independent, open-source project. WhatsApp is a registered trademark of Meta Platforms, Inc. This project is not affiliated with, endorsed by, or sponsored by WhatsApp or Meta. All trademarks belong to their respective owners.
 
----
-
-## License
-MIT License. Created for personal, educational, and persistent automation projects.
+<p align="center">
+  <sub>Built with ❤️ for privacy-conscious WhatsApp users across India and worldwide.</sub>
+</p>
