@@ -103,45 +103,55 @@
   <!-- ========================================================================= -->
   <!-- FULL-WIDTH EDGE-TO-EDGE STICKY NAVIGATION BAR -->
   <!-- ========================================================================= -->
-  <header class="sticky top-0 z-50 w-full bg-white/95 dark:bg-[#090d16]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
-    <div class="w-full px-4 sm:px-6 lg:px-10 h-16 flex items-center justify-between">
+  <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-[#090d16]/80 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800/70 transition-all duration-300 shadow-sm shadow-slate-900/[0.03]">
+    <div class="w-full px-3.5 sm:px-6 lg:px-10 h-16 sm:h-[68px] flex items-center justify-between">
       
       <!-- Left: Logo & Live Status Indicator -->
-      <div class="flex items-center gap-3">
-        <a href="/" class="flex items-center gap-2.5 group">
-          <div class="w-9 h-9 rounded-xl bg-[#25D366] flex items-center justify-center text-white shadow-md shadow-[#25D366]/30 group-hover:scale-105 transition">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <a href="/" class="flex items-center gap-2.5 group shrink-0">
+          <div class="relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-[#128C7E] to-[#25D366] flex items-center justify-center text-white shadow-md shadow-[#25D366]/25 group-hover:scale-105 group-active:scale-95 transition-transform duration-200">
+            <svg class="w-5 h-5 sm:w-5 sm:h-5 drop-shadow-sm" viewBox="0 0 24 24" fill="none">
               <path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/>
             </svg>
+            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white dark:border-[#090d16] animate-pulse"></span>
           </div>
-          <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">WAKeep</span>
+          <div class="flex flex-col">
+            <div class="flex items-center gap-1.5">
+              <span class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">WAKeep</span>
+              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>24/7
+              </span>
+            </div>
+            <span class="hidden xs:block text-[10px] text-slate-400 dark:text-slate-500 font-medium tracking-tight">Persistent Gateway</span>
+          </div>
         </a>
 
-        <!-- Mini Header Status Badge -->
-        <div id="headerStatusBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+        <!-- Mini Header Status Badge (Tablet & Desktop) -->
+        <div id="headerStatusBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200/70 dark:border-slate-800/70 bg-slate-50/80 dark:bg-slate-900/80 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
           <span id="headerStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span id="headerStatusText">Standby</span>
+          <span id="headerStatusText">Checking</span>
         </div>
       </div>
 
       <!-- Center: Navigation Links (Desktop) -->
-      <nav class="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-500 dark:text-slate-400">
-        <a href="#howItWorks" class="hover:text-slate-900 dark:hover:text-white transition">How it works</a>
-        <a href="#security" class="hover:text-slate-900 dark:hover:text-white transition">AES-256 Vault</a>
-        <a href="#faq" class="hover:text-slate-900 dark:hover:text-white transition">FAQ</a>
-        <a href="/api/health" target="_blank" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+      <nav class="hidden md:flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100/70 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/50 text-xs font-semibold text-slate-600 dark:text-slate-400">
+        <a href="#howItWorks" class="px-3 py-1.5 rounded-full hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 transition">How it works</a>
+        <a href="#security" class="px-3 py-1.5 rounded-full hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 transition">AES-256 Vault</a>
+        <a href="javascript:void(0)" onclick="openLegalModal('compliance')" class="px-3 py-1.5 rounded-full hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 transition">IT Rules Legal</a>
+        <a href="#faq" class="px-3 py-1.5 rounded-full hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 transition">FAQ</a>
+        <a href="/api/health" target="_blank" class="px-3 py-1.5 rounded-full hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/60 dark:hover:bg-slate-800/60 transition flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>Health API</span>
         </a>
       </nav>
 
-      <!-- Right: Controls & Mobile Hamburger -->
-      <div class="flex items-center gap-2.5 sm:gap-3">
+      <!-- Right: Action Controls (Optimized for Mobile Screens) -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
         <!-- Theme Switcher Button -->
         <button
           type="button"
           onclick="toggleTheme()"
-          class="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition"
+          class="w-9 h-9 rounded-full bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition active:scale-95 shadow-sm"
           title="Toggle Light / Dark Mode"
         >
           <svg id="themeIconSun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,32 +166,97 @@
         <button
           id="navActionBtn"
           onclick="scrollToConsole()"
-          class="px-4 py-2 rounded-full text-xs font-semibold bg-slate-900 hover:bg-black text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 shadow-sm transition active:scale-95"
+          class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold bg-slate-900 hover:bg-black text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 shadow-sm transition active:scale-95 flex items-center gap-1.5 shrink-0"
         >
-          Live Console
+          <svg class="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <span id="navActionBtnText">Unlock Console</span>
         </button>
 
-        <!-- Mobile Menu Toggle Button -->
+        <!-- Mobile Menu Toggle Button (with Animated Icon) -->
         <button
           type="button"
           onclick="toggleMobileMenu()"
-          class="md:hidden w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300"
+          class="md:hidden w-9 h-9 rounded-full bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-center text-slate-700 dark:text-slate-200 active:scale-95 transition shadow-sm"
           title="Toggle Navigation Menu"
+          aria-label="Navigation Menu"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg id="mobileMenuIconOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <svg id="mobileMenuIconClose" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
     </div>
 
-    <!-- Mobile Navigation Drawer -->
-    <div id="mobileMenuDrawer" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#090d16]/95 px-5 py-4 space-y-3">
-      <a href="#howItWorks" onclick="toggleMobileMenu()" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 py-1.5">How it works</a>
-      <a href="#security" onclick="toggleMobileMenu()" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 py-1.5">AES-256 Vault</a>
-      <a href="#faq" onclick="toggleMobileMenu()" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 py-1.5">FAQ</a>
-      <a href="/api/health" target="_blank" class="block text-xs font-semibold text-emerald-600 dark:text-emerald-400 py-1.5">Keep-Alive Health API</a>
+    <!-- Mobile Navigation Drawer (Full-Featured Glassmorphic Slide-Down) -->
+    <div id="mobileMenuDrawer" class="hidden md:hidden border-t border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#090d16]/95 backdrop-blur-2xl px-4 pt-3 pb-5 space-y-3.5 shadow-2xl transition-all">
+      
+      <!-- Telemetry Strip Card -->
+      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800/70 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Server Companion
+          </span>
+          <span id="mobileSlotsBadge" class="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            Checking slots...
+          </span>
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 border-t border-slate-200/50 dark:border-slate-800/50 pt-1.5">
+          <span>AES-256-GCM Vault</span>
+          <span>Zero Chats Collected</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links Grid -->
+      <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+        <a href="#howItWorks" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800/60 text-slate-700 dark:text-slate-200 flex items-center gap-2 transition">
+          <span class="text-base">⚡</span>
+          <span>How it works</span>
+        </a>
+        <a href="#security" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800/60 text-slate-700 dark:text-slate-200 flex items-center gap-2 transition">
+          <span class="text-base">🛡️</span>
+          <span>AES-256 Vault</span>
+        </a>
+        <a href="javascript:void(0)" onclick="toggleMobileMenu(); openLegalModal('compliance');" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800/60 text-slate-700 dark:text-slate-200 flex items-center gap-2 transition">
+          <span class="text-base">⚖️</span>
+          <span>Legal &amp; IT Act</span>
+        </a>
+        <a href="#faq" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800/60 text-slate-700 dark:text-slate-200 flex items-center gap-2 transition">
+          <span class="text-base">❓</span>
+          <span>FAQs</span>
+        </a>
+      </div>
+
+      <!-- Health API & Support Contact -->
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <a href="/api/health" target="_blank" class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span>24/7 Health API</span>
+        </a>
+        <a href="mailto:harrykrishnan7@gmail.com" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <span>Email Support</span>
+        </a>
+      </div>
+
+      <!-- Full-Width Mobile CTA Button -->
+      <button
+        type="button"
+        onclick="scrollToConsole()"
+        class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-bold transition shadow-md active:scale-98 flex items-center justify-center gap-2"
+      >
+        <svg class="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        <span>Open 24/7 Companion Console</span>
+      </button>
+
     </div>
   </header>
 
@@ -1229,6 +1304,16 @@
               createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
             }
           }
+        const mobileBadge = document.getElementById('mobileSlotsBadge');
+        if (mobileBadge) {
+          mobileBadge.textContent = `${data.slotsRemaining} of ${data.totalSlots} Slots Free`;
+          if (data.slotsRemaining <= 0) {
+            mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20';
+          } else if (data.slotsRemaining <= 2) {
+            mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
+          } else {
+            mobileBadge.className = 'font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+          }
         }
       } catch (err) {
         console.warn('Slots check warning:', err);
@@ -1242,14 +1327,33 @@
 
     function toggleMobileMenu() {
       const drawer = document.getElementById('mobileMenuDrawer');
-      drawer.classList.toggle('hidden');
+      const iconOpen = document.getElementById('mobileMenuIconOpen');
+      const iconClose = document.getElementById('mobileMenuIconClose');
+      const isOpen = !drawer.classList.contains('hidden');
+
+      if (isOpen) {
+        drawer.classList.add('hidden');
+        if (iconOpen) iconOpen.classList.remove('hidden');
+        if (iconClose) iconClose.classList.add('hidden');
+      } else {
+        drawer.classList.remove('hidden');
+        if (iconOpen) iconOpen.classList.add('hidden');
+        if (iconClose) iconClose.classList.remove('hidden');
+        updateServerSlots();
+      }
     }
 
     function scrollToConsole() {
+      const drawer = document.getElementById('mobileMenuDrawer');
+      if (drawer && !drawer.classList.contains('hidden')) {
+        toggleMobileMenu();
+      }
       const consoleEl = document.getElementById('unlockedConsole');
       if (consoleEl && !consoleEl.classList.contains('hidden')) {
         consoleEl.scrollIntoView({ behavior: 'smooth' });
       } else {
+        const hub = document.getElementById('heroLockCard');
+        if (hub) hub.scrollIntoView({ behavior: 'smooth' });
         const createInput = document.getElementById('createSessionNameInput');
         if (createInput) createInput.focus();
       }
@@ -1411,13 +1515,15 @@
       if (heartbeatIntervalTimer) clearInterval(heartbeatIntervalTimer);
       document.getElementById('heroLockCard').classList.remove('hidden');
       document.getElementById('unlockedConsole').classList.add('hidden');
-      document.getElementById('navActionBtn').textContent = 'Unlock Console';
+      const navText = document.getElementById('navActionBtnText');
+      if (navText) navText.textContent = 'Unlock Console';
     }
 
     function showUnlockedDashboard() {
       document.getElementById('heroLockCard').classList.add('hidden');
       document.getElementById('unlockedConsole').classList.remove('hidden');
-      document.getElementById('navActionBtn').textContent = 'Live Console';
+      const navText = document.getElementById('navActionBtnText');
+      if (navText) navText.textContent = 'Live Console';
     }
 
     async function lockConsole() {
