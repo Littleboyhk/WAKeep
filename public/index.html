@@ -128,8 +128,8 @@
 
         <!-- Mini Header Status Badge (Tablet & Desktop) -->
         <div id="headerStatusBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200/70 dark:border-slate-800/70 bg-slate-50/80 dark:bg-slate-900/80 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-          <span id="headerStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span id="headerStatusText">Checking</span>
+          <span id="headerStatusDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="headerStatusText">Server Online</span>
         </div>
       </div>
 
@@ -1587,6 +1587,12 @@
       document.getElementById('unlockedConsole').classList.add('hidden');
       const navText = document.getElementById('navActionBtnText');
       if (navText) navText.textContent = 'Unlock Console';
+      const hDot = document.getElementById('headerStatusDot');
+      const hText = document.getElementById('headerStatusText');
+      if (hDot && hText) {
+        hDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        hText.textContent = 'Server Online';
+      }
     }
 
     function showUnlockedDashboard() {
