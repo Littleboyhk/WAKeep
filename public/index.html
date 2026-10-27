@@ -407,15 +407,31 @@
             <span id="liveRam" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">34.6 MB</span>
           </div>
 
-          <button
-            onclick="lockConsole()"
-            class="px-4 py-2 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-            <span>Switch / Lock</span>
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onclick="lockConsole()"
+              class="px-4 py-2 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
+              title="Lock screen / return to login"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              <span>Switch / Lock</span>
+            </button>
+
+            <button
+              type="button"
+              onclick="triggerLogoutAccount()"
+              class="px-4 py-2 rounded-full border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition flex items-center gap-1.5 active:scale-95 shadow-sm"
+              title="Unlink and log out your WhatsApp account from this server"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Log Out Account</span>
+            </button>
+          </div>
         </div>
 
       </div>
@@ -692,19 +708,45 @@
             </div>
           </div>
 
-          <!-- Reset Session Card -->
-          <div class="p-5 rounded-2xl sm:rounded-3xl border border-rose-200 dark:border-rose-950/60 bg-rose-50/50 dark:bg-rose-950/10 text-center">
-            <h4 class="text-xs font-bold text-rose-600 dark:text-rose-400">Reset Session Vault</h4>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 mb-3">
-              Wipes encrypted keys from Supabase and initiates a fresh QR scan.
+          <!-- Log Out & Remove Account Card -->
+          <div class="p-6 rounded-2xl sm:rounded-3xl border border-rose-200 dark:border-rose-950/60 bg-rose-50/40 dark:bg-rose-950/10 space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-rose-600 dark:text-rose-400">Log Out &amp; Remove Account</h4>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Unlink WhatsApp from our server</p>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Want to stop 24/7 keep-alive and remove your WhatsApp account from this server? This immediately tells WhatsApp servers to unlink your account and purges all encrypted credentials from the database.
             </p>
-            <button
-              type="button"
-              onclick="triggerResetVault()"
-              class="px-5 py-2 rounded-full text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition shadow-sm"
-            >
-              Reset Vault
-            </button>
+
+            <div class="flex flex-col sm:flex-row gap-2 pt-1">
+              <button
+                type="button"
+                onclick="triggerLogoutAccount()"
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition shadow-sm active:scale-98 flex items-center justify-center gap-2"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Log Out WhatsApp</span>
+              </button>
+
+              <button
+                type="button"
+                onclick="triggerResetVault()"
+                class="py-2.5 px-3 rounded-xl text-xs font-medium border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100/60 dark:hover:bg-rose-950/30 text-rose-700 dark:text-rose-300 transition text-center"
+                title="Clear vault and generate new QR code"
+              >
+                Reset QR
+              </button>
+            </div>
           </div>
 
         </div>
@@ -1537,6 +1579,41 @@
         if (!res.ok) throw new Error(data.error || 'Ping failed');
         logGatewayActivity('Self-addressed test ping confirmed by linked phone', 'Test Ping', 'emerald');
         showNotification('🏓 Ping delivered to your phone!');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function triggerLogoutAccount() {
+      const confirmed = confirm(
+        '🚪 Log Out WhatsApp Account from Server?\n\n' +
+        'This will:\n' +
+        '1. Terminate this companion session with WhatsApp servers\n' +
+        '2. Completely purge all your encrypted credentials from the database\n' +
+        '3. Halt 24/7 keep-alive for this account\n\n' +
+        'Are you sure you want to log out your WhatsApp account?'
+      );
+      if (!confirmed) return;
+
+      try {
+        showNotification('Logging out account from server...');
+        const res = await fetch('/api/session/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to logout account');
+
+        showNotification('Account successfully logged out and removed!');
+        localStorage.removeItem('wakeep_token');
+        localStorage.removeItem('wakeep_session_id');
+        authToken = null;
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+        }
+        if (heartbeatIntervalTimer) clearInterval(heartbeatIntervalTimer);
+        showLockedHero();
       } catch (err) {
         alert(err.message);
       }

@@ -280,6 +280,33 @@ export class MultiSessionManager {
   }
 
   /**
+   * Unlinks the WhatsApp account, instructs WhatsApp servers to terminate this device companion,
+   * wipes all encrypted session credentials from Supabase, and halts reconnect loops.
+   */
+  public async logoutAndRemoveSession(rawSessionId: string): Promise<void> {
+    const sessionId = this.cleanSessionId(rawSessionId) || this.defaultSessionId;
+    console.log(`[MultiSessionManager] Logging out and purging session [${sessionId}]...`);
+
+    const manager = this.sessions.get(sessionId);
+    if (manager) {
+      await manager.logoutAccount();
+      if (sessionId !== this.defaultSessionId) {
+        this.sessions.delete(sessionId);
+      }
+    }
+
+    // Purge session metadata and all related keys from Supabase
+    try {
+      if (sessionId !== this.defaultSessionId) {
+        await this.supabase.from('wa_auth_vault').delete().eq('id', `${sessionId}:__session_meta`);
+      }
+      await this.supabase.from('wa_auth_vault').delete().like('id', `${sessionId}:%`);
+    } catch (dbErr: any) {
+      console.warn(`[MultiSessionManager] Non-fatal vault purge notice for [${sessionId}]:`, dbErr.message);
+    }
+  }
+
+  /**
    * Graceful shutdown of all active sessions
    */
   public async shutdownAll(): Promise<void> {

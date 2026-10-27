@@ -345,6 +345,50 @@ export class WhatsAppClientManager {
   }
 
   /**
+   * Unlinks the WhatsApp account, instructs WhatsApp servers to terminate this device companion,
+   * purges all encrypted credentials from Supabase, and halts reconnect loops.
+   */
+  public async logoutAccount(): Promise<void> {
+    this.isExplicitDisconnect = true;
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    try {
+      if (this.sock) {
+        this.sock.ev.removeAllListeners('connection.update');
+        this.sock.ev.removeAllListeners('creds.update');
+        try {
+          await this.sock.logout('User initiated account logout from WAKeep server');
+        } catch (logoutErr: any) {
+          console.warn('[WhatsAppClient] Non-fatal sock.logout notice:', logoutErr.message);
+        }
+        try {
+          this.sock.end(undefined);
+        } catch {}
+        this.sock = null;
+      }
+
+      if (this.authStateResult) {
+        await this.authStateResult.clearVault();
+      }
+
+      this.currentQrDataUrl = null;
+      this.lastPairingCode = null;
+      this.reconnectAttempts = 0;
+      this.status = 'logged_out';
+      this.broadcastStatus();
+
+      console.log(`[WhatsAppClient] Session [${this.sessionId}] account successfully logged out and purged from server.`);
+    } catch (err: any) {
+      console.error('[WhatsAppClient] Error during logoutAccount:', err.message);
+      throw err;
+    }
+  }
+
+  /**
    * Resets the Supabase vault and forces new QR code generation
    */
   public async resetVault(): Promise<void> {

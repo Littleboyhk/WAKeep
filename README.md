@@ -235,8 +235,12 @@ We designed WAKeep around strict privacy and legal compliance principles:
 </details>
 
 <details>
-<summary><strong>4. How do I disconnect or logout my WhatsApp?</strong></summary>
-<p>You have full control right from your smartphone. Open WhatsApp &rarr; <strong>Settings</strong> &rarr; <strong>Linked Devices</strong> &rarr; tap <strong>WAKeep</strong> &rarr; tap <strong>Log out</strong>. The connection will terminate instantly.</p>
+<summary><strong>4. How do I disconnect or logout my WhatsApp from the server?</strong></summary>
+<p>You have full control and can log out at any time through either of two ways:</p>
+<ol>
+  <li><strong>Directly from the Website Console:</strong> Click the red <strong>"Log Out Account"</strong> button in your dashboard. This immediately tells WhatsApp servers to unlink the session and completely purges all encrypted vault keys and metadata from the database.</li>
+  <li><strong>From Your Smartphone:</strong> Open WhatsApp &rarr; <strong>Settings</strong> &rarr; <strong>Linked Devices</strong> &rarr; tap <strong>WAKeep</strong> &rarr; tap <strong>Log out</strong>. The connection will terminate immediately.</li>
+</ol>
 </details>
 
 <details>
@@ -264,6 +268,7 @@ WAKeep exposes clean, rate-limited REST endpoints for developers building person
 | `POST` | `/api/session/pair` | 🔑 Admin Auth | Requests 8-digit pairing code for an international phone number |
 | `POST` | `/api/session/message` | 🔑 Admin Auth | Dispatches an outgoing message to any phone number or JID |
 | `POST` | `/api/session/ping` | 🔑 Admin Auth | Sends an automated self-addressed latency ping to linked phone |
+| `POST` | `/api/session/logout` | 🔑 Admin Auth | Unlinks WhatsApp device and purges all credentials from server |
 | `POST` | `/api/session/reset` | 🔑 Admin Auth | Clears the encrypted Supabase vault to prepare for fresh scan |
 | `GET` | `/api/session/messages` | 🔑 Admin Auth | Returns empty list (Zero Data Collection: No chat messages stored) |
 

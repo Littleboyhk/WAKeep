@@ -404,6 +404,16 @@ app.post('/api/session/reset', requirePinAuth, resetRateLimiter, async (req: Aut
   }
 });
 
+app.post('/api/session/logout', requirePinAuth, resetRateLimiter, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const targetSessionId = req.sessionId || SESSION_ID;
+    await sessionManager.logoutAndRemoveSession(targetSessionId);
+    res.json({ success: true, message: 'WhatsApp account logged out and purged from server successfully.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to logout WhatsApp account.' });
+  }
+});
+
 app.get('/api/session/messages', requirePinAuth, async (_req: Request, res: Response) => {
   // Privacy Guarantee: Zero Data Collection active — No user messages are logged or collected
   res.json({
