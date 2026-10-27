@@ -565,14 +565,249 @@
   </main>
 
   <!-- ========================================================================= -->
-  <!-- FOOTER -->
+  <!-- FOOTER & LEGAL LINKS (India IT Act 2000 & DPDP Act 2023 Compliant) -->
   <!-- ========================================================================= -->
-  <footer class="border-t border-slate-200/80 dark:border-slate-800/80 py-8 px-4 sm:px-8 text-center text-xs text-slate-400 bg-white/50 dark:bg-transparent">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-      <p>WAKeep &bull; 24/7 Persistent WhatsApp Web Bridge</p>
-      <p class="font-mono text-[11px] text-slate-400">Encrypted AES-256-GCM Vault &bull; Supabase Backend</p>
+  <footer class="border-t border-slate-200/80 dark:border-slate-800/80 py-8 px-4 sm:px-8 text-xs text-slate-500 dark:text-slate-400 bg-white/60 dark:bg-transparent transition-colors">
+    <div class="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      
+      <!-- Brand & Description -->
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-900 dark:text-white">WAKeep</span>
+        <span>&bull;</span>
+        <span>24/7 Persistent WhatsApp Web Bridge</span>
+      </div>
+
+      <!-- Legal Modal Triggers -->
+      <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-medium">
+        <button type="button" onclick="openLegalModal('privacy')" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline-offset-4 hover:underline">
+          Privacy Policy (Zero Data Collection)
+        </button>
+        <button type="button" onclick="openLegalModal('terms')" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline-offset-4 hover:underline">
+          Terms of Service
+        </button>
+        <button type="button" onclick="openLegalModal('compliance')" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline-offset-4 hover:underline">
+          Indian IT & DoT Compliance
+        </button>
+        <button type="button" onclick="openLegalModal('disclaimer')" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition underline-offset-4 hover:underline">
+          Disclaimer
+        </button>
+      </div>
+
+      <!-- Architecture Badge -->
+      <p class="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+        DPDP Act 2023 Compliant &bull; Self-Hosted
+      </p>
+
     </div>
   </footer>
+
+  <!-- ========================================================================= -->
+  <!-- LEGAL & REGULATORY MODAL (India IT Act & DPDP Act 2023) -->
+  <!-- ========================================================================= -->
+  <div id="legalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 hidden transition-opacity duration-200">
+    <div class="bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800 w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Legal & Regulatory Documentation</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Compliant with the Information Technology Act, 2000 & DPDP Act 2023 (India)</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onclick="closeLegalModal()"
+          class="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          title="Close dialog"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="flex overflow-x-auto border-b border-slate-100 dark:border-slate-800 px-6 pt-2 bg-white dark:bg-[#0c121e] text-xs font-semibold scrollbar-none">
+        <button
+          type="button"
+          id="legalTabPrivacyBtn"
+          onclick="switchLegalTab('privacy')"
+          class="px-4 py-2.5 border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 transition whitespace-nowrap"
+        >
+          Privacy Policy (Zero Data Collection)
+        </button>
+        <button
+          type="button"
+          id="legalTabTermsBtn"
+          onclick="switchLegalTab('terms')"
+          class="px-4 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition whitespace-nowrap"
+        >
+          Terms of Service
+        </button>
+        <button
+          type="button"
+          id="legalTabComplianceBtn"
+          onclick="switchLegalTab('compliance')"
+          class="px-4 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition whitespace-nowrap"
+        >
+          Indian IT & DoT Compliance
+        </button>
+        <button
+          type="button"
+          id="legalTabDisclaimerBtn"
+          onclick="switchLegalTab('disclaimer')"
+          class="px-4 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition whitespace-nowrap"
+        >
+          Disclaimer & Trademarks
+        </button>
+      </div>
+
+      <!-- Tab Contents (Scrollable) -->
+      <div class="p-6 overflow-y-auto space-y-6 text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-h-[60vh]">
+        
+        <!-- TAB 1: PRIVACY POLICY -->
+        <div id="legalContentPrivacy" class="space-y-4">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-semibold text-[11px]">
+            <span>🛡️</span>
+            <span>Zero-Knowledge & Zero Data Collection Policy</span>
+          </div>
+
+          <p class="text-slate-700 dark:text-slate-200 font-medium">
+            This Privacy Policy governs the use of <strong>WAKeep</strong>, a self-hosted, open-source WhatsApp Web companion gateway.
+          </p>
+
+          <div class="space-y-3">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">1. Absolute Zero Data Collection Guarantee</h4>
+            <p>
+              The creators, developers, contributors, and open-source maintainers of WAKeep <strong>DO NOT</strong> collect, store, intercept, inspect, transmit, harvest, or monetize any of your data:
+            </p>
+            <ul class="list-disc list-inside space-y-1 pl-2 text-slate-500 dark:text-slate-400">
+              <li><strong>Zero Message Data:</strong> We never see, copy, or read your incoming or outgoing WhatsApp messages.</li>
+              <li><strong>Zero Contact Harvesting:</strong> We do not collect contact lists, phone numbers, or chat metadata.</li>
+              <li><strong>Zero Remote Analytics:</strong> There are no third-party tracking scripts, advertising trackers, or developer telemetry pings embedded in this software.</li>
+              <li><strong>Zero Credential Access:</strong> Your authentication secrets and encryption keys are held strictly in your own environment.</li>
+            </ul>
+
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-2">2. Compliance with Digital Personal Data Protection Act, 2023 (India)</h4>
+            <p>
+              In accordance with India’s <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>:
+            </p>
+            <ul class="list-disc list-inside space-y-1 pl-2 text-slate-500 dark:text-slate-400">
+              <li><strong>Data Principal:</strong> You (the user) are the sole Data Principal of your WhatsApp data.</li>
+              <li><strong>Data Fiduciary:</strong> Because WAKeep is a self-hosted software deployed onto your own personal Supabase database and Render instance, you are the exclusive operator and Data Fiduciary of your personal instance.</li>
+              <li><strong>No Third-Party Data Transfer:</strong> All cryptographic operations happen locally inside your deployment container. Data never leaves your private cloud boundary.</li>
+            </ul>
+
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-2">3. Client-Side Cryptographic Security</h4>
+            <p>
+              All multi-device session credentials and pre-keys are encrypted client-side using industry-standard <strong>AES-256-GCM</strong> (Authenticated Encryption) before being written to your personal Supabase database. Without your local 32-byte <code class="font-mono text-emerald-600 dark:text-emerald-400">VAULT_SECRET_KEY</code>, the database contents are mathematically undecipherable.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 2: TERMS OF SERVICE -->
+        <div id="legalContentTerms" class="hidden space-y-4">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-semibold text-[11px]">
+            <span>📜</span>
+            <span>Terms of Service & Acceptable Use</span>
+          </div>
+
+          <div class="space-y-3">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">1. Grant of License</h4>
+            <p>
+              WAKeep is provided under the permissive open-source <strong>MIT License</strong>. You are free to self-host, audit, and run this software for your personal and internal business communication needs.
+            </p>
+
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-2">2. Acceptable Use Policy & Indian IT Act, 2000</h4>
+            <p>
+              You agree to use WAKeep strictly in compliance with applicable laws, including the <strong>Information Technology Act, 2000</strong> of India:
+            </p>
+            <ul class="list-disc list-inside space-y-1 pl-2 text-slate-500 dark:text-slate-400">
+              <li><strong>No Unsolicited Bulk Messaging (Spam):</strong> You shall not use this software for automated spamming, mass bulk advertising, or non-consensual communications.</li>
+              <li><strong>No Unlawful Content:</strong> Transmission of defamatory, obscene, fraudulent, or cyber-terrorism material (under Sections 66A, 66F, and 67 of the IT Act) is strictly prohibited.</li>
+              <li><strong>Authorized Account Ownership:</strong> You may only link WhatsApp accounts that you legally own and operate.</li>
+            </ul>
+
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-2">3. Limitation of Liability & "As Is" Warranty</h4>
+            <p>
+              The software is provided "AS IS", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, or non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, account suspensions, or other liability arising from the use of this software.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 3: INDIAN IT & DOT COMPLIANCE -->
+        <div id="legalContentCompliance" class="hidden space-y-4">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-semibold text-[11px]">
+            <span>🇮🇳</span>
+            <span>Department of Telecommunications (DoT) & IT Rules Compliance</span>
+          </div>
+
+          <div class="space-y-3">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">1. Department of Telecommunications (DoT) Advisory Notice</h4>
+            <p>
+              The Indian Department of Telecommunications (DoT) enforces strict SIM-binding and companion device security guidelines:
+            </p>
+            <ul class="list-disc list-inside space-y-1 pl-2 text-slate-500 dark:text-slate-400">
+              <li><strong>Primary SIM-Binding Requirement:</strong> WAKeep operates as an authorized companion client under WhatsApp's multi-device specification. In compliance with DoT security advisories, you must maintain your physical SIM card active in your primary mobile device.</li>
+              <li><strong>Risk-Based Disconnect Notice:</strong> If your physical SIM card is removed, deactivated, or disconnected by your Indian telecom service provider (Airtel, Jio, Vi, BSNL), WhatsApp multi-device authentication servers will automatically invalidate companion tokens.</li>
+            </ul>
+
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-2">2. End-to-End Encryption Preservation</h4>
+            <p>
+              WAKeep operates with complete fidelity to WhatsApp's cryptographic architecture. It utilizes client-side libsignal protocols and does not bypass, weaken, or circumvent WhatsApp's end-to-end encryption protocols.
+            </p>
+
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white pt-2">3. Intermediary Status (Section 79 IT Act)</h4>
+            <p>
+              WAKeep is software, not a service provider or intermediary. The software author does not transmit, receive, or store third-party content. All transmission occurs directly between the user's personal deployment and WhatsApp's official multi-device gateway servers.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 4: DISCLAIMER & TRADEMARKS -->
+        <div id="legalContentDisclaimer" class="hidden space-y-4">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px]">
+            <span>⚖️</span>
+            <span>Trademark & Non-Affiliation Notice</span>
+          </div>
+
+          <div class="space-y-3">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">Non-Affiliation Notice</h4>
+            <p>
+              <strong>WAKeep</strong> is an independent open-source software project. It is <strong>NOT</strong> affiliated, associated, authorized, endorsed by, or in any way officially connected with <strong>WhatsApp LLC</strong>, <strong>Meta Platforms, Inc.</strong>, or any of their subsidiaries or affiliates.
+            </p>
+            <p>
+              The official WhatsApp website can be accessed at <a href="https://whatsapp.com" target="_blank" class="text-emerald-600 dark:text-emerald-400 underline">https://whatsapp.com</a>.
+            </p>
+            <p>
+              The name "WhatsApp" as well as related names, marks, emblems, and images are registered trademarks of their respective owners. Any reference to WhatsApp or Meta in this software is strictly for identification and compatibility purposes under fair use.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+        <span class="text-[11px] text-slate-400">Jurisdiction: Republic of India</span>
+        <button
+          type="button"
+          onclick="closeLegalModal()"
+          class="px-5 py-2 rounded-full text-xs font-semibold bg-slate-900 hover:bg-black text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition shadow-sm"
+        >
+          Acknowledge & Close
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- TOAST NOTIFICATION -->
   <div id="appToast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
@@ -1044,6 +1279,59 @@
         toast.classList.remove('translate-y-0', 'opacity-100');
       }, 3000);
     }
+
+    // =========================================================================
+    // Legal & Regulatory Modal Controls (India DPDP Act & IT Act)
+    // =========================================================================
+    function openLegalModal(tab = 'privacy') {
+      const modal = document.getElementById('legalModal');
+      modal.classList.remove('hidden');
+      switchLegalTab(tab);
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLegalModal() {
+      const modal = document.getElementById('legalModal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (window.location.hash.match(/#(privacy|terms|compliance|disclaimer)/)) {
+        history.replaceState(null, null, window.location.pathname);
+      }
+    }
+
+    function switchLegalTab(tab) {
+      const tabs = ['privacy', 'terms', 'compliance', 'disclaimer'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`legalTab${capitalize(t)}Btn`);
+        const content = document.getElementById(`legalContent${capitalize(t)}`);
+        if (t === tab) {
+          btn.className = 'px-4 py-2.5 border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 transition whitespace-nowrap font-bold';
+          content.classList.remove('hidden');
+        } else {
+          btn.className = 'px-4 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition whitespace-nowrap';
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLegalModal();
+    });
+
+    document.getElementById('legalModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'legalModal') closeLegalModal();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['privacy', 'terms', 'compliance', 'disclaimer'].includes(hash)) {
+        openLegalModal(hash);
+      }
+    });
   </script>
 </body>
 </html>
