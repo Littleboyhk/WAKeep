@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>WAKeep - 24/7 Persistent WhatsApp Web Bridge</title>
   <meta name="description" content="Never get logged out of WhatsApp Web again. 24/7 persistent companion gateway with encrypted Supabase vault.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -107,9 +109,9 @@
       <!-- Left: Logo & Live Status Indicator -->
       <div class="flex items-center gap-3">
         <a href="/" class="flex items-center gap-2.5 group">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.28-2.42 5.84a8.18 8.18 0 01-5.82 2.41c-1.42 0-2.82-.37-4.06-1.08l-.29-.17-3.02.79.81-2.94-.19-.31a8.186 8.186 0 01-1.25-4.54c0-4.54 3.7-8.24 8.24-8.24m4.52 11.64c-.25-.13-1.47-.72-1.7-.81-.23-.08-.4-.13-.57.13-.17.25-.66.81-.81.98-.15.17-.3.19-.55.06-.25-.13-1.07-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.3.38-.45.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.37-.78-1.88-.2-.49-.41-.43-.57-.44l-.49-.01c-.17 0-.44.06-.67.32-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.72 4.31 3.81.6.26 1.07.42 1.44.54.61.19 1.16.17 1.6.1.49-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.3"/>
+          <div class="w-9 h-9 rounded-xl bg-[#25D366] flex items-center justify-center text-white shadow-md shadow-[#25D366]/30 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+              <path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/>
             </svg>
           </div>
           <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">WAKeep</span>
@@ -191,7 +193,10 @@
     <!-- Top Badge Tagline -->
     <div class="flex justify-center mb-5">
       <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur shadow-sm text-xs font-semibold text-slate-600 dark:text-slate-300">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="12" fill="#25D366"/>
+          <path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/>
+        </svg>
         <span>Persistent 24/7 Companion Engine</span>
         <span class="text-slate-400 dark:text-slate-500">&rarr;</span>
       </div>
@@ -200,7 +205,7 @@
     <!-- Fluid Hero Headline -->
     <div class="text-center max-w-4xl mx-auto px-2">
       <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.12]">
-        WAKeep WhatsApp Web.<br>
+        WAKeep <span class="inline-flex items-center gap-2"><svg class="inline-block w-8 h-8 sm:w-11 sm:h-11 align-middle" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg> WhatsApp Web</span>.<br>
         <span class="text-slate-400 dark:text-slate-500 font-medium">Never get logged out again.</span>
       </h1>
       <p class="mt-4 sm:mt-5 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
@@ -239,7 +244,10 @@
       <div id="createSessionForm" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl shadow-slate-200/50 dark:shadow-black/60 space-y-4 transition">
         <div class="text-left border-b border-slate-100 dark:border-slate-800 pb-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Activate Your Private 24/7 Companion</h3>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
+              <span>Activate Your Private 24/7 Companion</span>
+            </h3>
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Zero Setup
@@ -317,7 +325,10 @@
       <!-- FORM 2: LOGIN TO EXISTING SESSION -->
       <div id="loginSessionForm" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl shadow-slate-200/50 dark:shadow-black/60 space-y-4 transition">
         <div class="text-left border-b border-slate-100 dark:border-slate-800 pb-3">
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Resume Existing Session</h3>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
+            <span>Resume Existing Session</span>
+          </h3>
           <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Enter your session identifier and password to manage your live WhatsApp Web connection.</p>
         </div>
 
@@ -381,10 +392,15 @@
         
         <!-- Status & Linked Number -->
         <div class="flex items-center gap-3.5">
-          <div id="statusDot" class="w-3.5 h-3.5 rounded-full bg-emerald-500 shrink-0"></div>
+          <div class="w-9 h-9 rounded-2xl bg-[#25D366] flex items-center justify-center shrink-0 shadow-md shadow-[#25D366]/20">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none"><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
+          </div>
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <span id="statusLabel" class="text-base font-bold text-slate-900 dark:text-white">Connected 24/7</span>
+              <span id="statusLabel" class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                Connected 24/7
+              </span>
               <span id="activeSessionBadge" class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700">
                 Session: main_session
               </span>
@@ -440,7 +456,10 @@
       <!-- ONE-TIME AUTH SECTION (Only visible if waiting for QR or pairing) -->
       <div id="pairingSection" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-xl">
         <div class="text-center max-w-lg mx-auto mb-8">
-          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">One-Time WhatsApp Link</h2>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2.5">
+            <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
+            <span>One-Time WhatsApp Link</span>
+          </h2>
           <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Scan the QR code or link directly using your phone number without a camera.
           </p>
@@ -453,15 +472,18 @@
               type="button"
               id="qrTabBtn"
               onclick="selectPairingTab('qr')"
-              class="px-5 py-2 rounded-full text-xs font-semibold transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
+              class="px-5 py-2 rounded-full text-xs font-semibold transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm flex items-center gap-1.5"
             >
-              QR Code Scan
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
+              <span>QR Code Scan</span>
             </button>
             <button
               type="button"
               id="codeTabBtn"
               onclick="selectPairingTab('code')"
-              class="px-5 py-2 rounded-full text-xs font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              class="px-5 py-2 rounded-full text-xs font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
             >
               8-Digit Phone Pairing Code
             </button>
@@ -538,10 +560,8 @@
             <!-- Card Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 gap-3">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
+                <div class="w-10 h-10 rounded-2xl bg-[#25D366] flex items-center justify-center shrink-0 shadow-md shadow-[#25D366]/20">
+                  <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none"><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
                 </div>
                 <div>
                   <h3 class="text-base font-bold text-slate-900 dark:text-white">24/7 Companion Gateway Telemetry</h3>
@@ -645,10 +665,8 @@
           <!-- 24/7 Keep-Alive Engine Card -->
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-xl space-y-5">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+              <div class="w-8 h-8 rounded-xl bg-[#25D366] flex items-center justify-center text-white shadow-sm shadow-[#25D366]/20">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none"><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
               </div>
               <div>
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">24/7 Keep-Alive Engine</h3>
@@ -849,6 +867,7 @@
       
       <!-- Brand & Description -->
       <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#ffffff" fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.955 8.955 0 0 0 12.053 3c-4.968 0-9.013 4.045-9.015 9.017 0 1.587.413 3.134 1.198 4.492l-1.272 4.64 4.75-1.246a8.97 8.97 0 0 0 4.29 1.09h.004c4.967 0 9.012-4.045 9.014-9.017a8.96 8.96 0 0 0-2.62-6.338ZM12.053 19.46a7.46 7.46 0 0 1-3.806-1.042l-.273-.162-2.827.741.754-2.756-.178-.282a7.462 7.462 0 0 1-1.144-3.942c.002-4.12 3.354-7.472 7.476-7.472 1.996 0 3.873.778 5.284 2.189a7.447 7.447 0 0 1 2.188 5.285c-.002 4.12-3.354 7.472-7.474 7.489Zm4.099-5.602c-.225-.113-1.332-.657-1.538-.732-.206-.075-.356-.113-.506.113-.15.225-.581.732-.712.882-.132.15-.263.169-.488.056-.225-.113-.95-.35-1.81-1.117-.67-.597-1.122-1.335-1.253-1.56-.131-.226-.014-.347.099-.46.101-.101.225-.263.338-.395.112-.131.15-.225.225-.375.075-.15.037-.282-.019-.394-.056-.113-.506-1.219-.694-1.67-.183-.439-.369-.379-.506-.386l-.432-.007c-.15 0-.394.056-.6.282-.206.225-.788.769-.788 1.875 0 1.107.806 2.176.919 2.326.112.15 1.587 2.424 3.844 3.399.537.232.956.37 1.284.475.54.172 1.031.148 1.42.09.433-.065 1.332-.544 1.52-1.07.187-.525.187-.975.131-1.07-.056-.093-.206-.15-.431-.263Z"/></svg>
         <span class="font-bold text-slate-900 dark:text-white">WAKeep</span>
         <span>&bull;</span>
         <span>24/7 Persistent WhatsApp Web Bridge</span>

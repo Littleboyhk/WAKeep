@@ -1,4 +1,4 @@
-# 🟢 WAKeep
+# <img src="public/whatsapp-logo.svg" width="36" height="36" align="center" alt="WhatsApp"> WAKeep
 
 <p align="center">
   <strong>24/7 Persistent WhatsApp Web Companion Gateway & Live Dashboard</strong><br>
@@ -6,6 +6,7 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="WhatsApp">
   <a href="https://wakeep.onrender.com"><img src="https://img.shields.io/badge/Live%20Demo-wakeep.onrender.com-10b981?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo"></a>
   <a href="https://github.com/Littleboyhk/WAKeep/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Platform-Node.js%2022%20LTS-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node Version">
