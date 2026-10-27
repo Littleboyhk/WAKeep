@@ -18,6 +18,16 @@ export class MultiSessionManager {
   private adminPassword?: string;
   private defaultSessionId: string;
   private sessions = new Map<string, WhatsAppClientManager>();
+  
+  // Blacklist of reserved system session names to prevent collision or impersonation
+  private static readonly RESERVED_SESSIONS = new Set([
+    'main_session', 'admin', 'root', 'system', 'api', 'auth', 'health',
+    'config', 'session', 'null', 'undefined', 'administrator', 'vault',
+    'supabase', 'render', 'test', 'public', 'private', 'dashboard', 'status'
+  ]);
+
+  // Per-session brute-force lockout tracker (session -> { count, lockedUntil })
+  private failedLoginAttempts = new Map<string, { count: number; lockedUntil: number }>();
 
   constructor(options: {
     supabase: SupabaseClient;
@@ -40,6 +50,40 @@ export class MultiSessionManager {
     if (!raw) return '';
     const cleaned = String(raw).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
     return cleaned;
+  }
+
+  /**
+   * Checks whether a session name is currently locked due to brute-force attempts
+   */
+  public isSessionLocked(sessionId: string): boolean {
+    const record = this.failedLoginAttempts.get(sessionId);
+    if (!record) return false;
+    if (Date.now() > record.lockedUntil) {
+      this.failedLoginAttempts.delete(sessionId);
+      return false;
+    }
+    return record.count >= 5;
+  }
+
+  /**
+   * Records a failed login attempt; locks the session for 15 minutes after 5 consecutive failures
+   */
+  public recordFailedLogin(sessionId: string): void {
+    const now = Date.now();
+    const record = this.failedLoginAttempts.get(sessionId) || { count: 0, lockedUntil: 0 };
+    record.count += 1;
+    if (record.count >= 5) {
+      record.lockedUntil = now + 15 * 60 * 1000; // 15-minute lockout
+      console.warn(`🔒 [Security Guard] Session [${sessionId}] locked for 15 minutes due to 5 failed login attempts.`);
+    }
+    this.failedLoginAttempts.set(sessionId, record);
+  }
+
+  /**
+   * Clears failed attempt tracking upon successful authentication
+   */
+  public clearFailedLogin(sessionId: string): void {
+    this.failedLoginAttempts.delete(sessionId);
   }
 
   /**
@@ -131,6 +175,7 @@ export class MultiSessionManager {
 
   /**
    * Creates a brand new user session with a private 8+ character password
+   * Hardened against session hijacking and reserved name collisions
    */
   public async createSession(
     rawSessionId: string,
@@ -138,34 +183,48 @@ export class MultiSessionManager {
   ): Promise<{ manager: WhatsAppClientManager; sessionId: string }> {
     const sessionId = this.cleanSessionId(rawSessionId);
 
-    if (!sessionId || sessionId.length < 3) {
-      throw new Error('Session ID must be between 3 and 32 alphanumeric characters.');
+    if (!sessionId || sessionId.length < 3 || sessionId.length > 32) {
+      throw new Error('Session Name must be between 3 and 32 alphanumeric characters.');
     }
 
-    if (sessionId.length > 32) {
-      throw new Error('Session ID cannot exceed 32 characters.');
+    // Block collision with reserved system names
+    if (MultiSessionManager.RESERVED_SESSIONS.has(sessionId)) {
+      throw new Error(`The session name "${sessionId}" is reserved. Please choose a custom name.`);
     }
 
-    if (!password || String(password).trim().length < 8) {
+    const trimmedPassword = String(password).trim();
+    if (!trimmedPassword || trimmedPassword.length < 8) {
       throw new Error('Password must be at least 8 characters long.');
     }
 
-    // Check if session metadata already exists in the Supabase vault
-    const metaVaultId = `${sessionId}:__session_meta`;
-    const { data: existingMeta } = await this.supabase
-      .from('wa_auth_vault')
-      .select('id, encrypted_payload')
-      .eq('id', metaVaultId)
-      .maybeSingle();
+    const commonWeak = ['password', '12345678', 'qwerty123', 'admin123', 'password123', 'whatsapp', 'wakeep123'];
+    if (commonWeak.includes(trimmedPassword.toLowerCase())) {
+      throw new Error('Please choose a stronger password (avoid common dictionary words or simple number sequences).');
+    }
 
-    if (existingMeta && existingMeta.encrypted_payload) {
+    // 1. Check in-memory active sessions
+    if (this.sessions.has(sessionId)) {
+      throw new Error(
+        `Session name "${sessionId}" is already registered. Please choose a different name or log into your existing session.`
+      );
+    }
+
+    // 2. Check if session metadata OR active credentials already exist in Supabase vault
+    const metaVaultId = `${sessionId}:__session_meta`;
+    const credsVaultId = `${sessionId}:creds`;
+    const { data: existingRows } = await this.supabase
+      .from('wa_auth_vault')
+      .select('id')
+      .in('id', [metaVaultId, credsVaultId]);
+
+    if (existingRows && existingRows.length > 0) {
       throw new Error(
         `Session name "${sessionId}" is already registered. Please choose a different name or log into your existing session.`
       );
     }
 
     // Store encrypted session metadata
-    const passwordHash = this.hashPassword(password);
+    const passwordHash = this.hashPassword(trimmedPassword);
     const metaPayload: SessionMeta = {
       sessionId,
       passwordHash,
@@ -187,6 +246,7 @@ export class MultiSessionManager {
 
   /**
    * Verifies credentials and unlocks an existing user session
+   * Hardened against brute force, user enumeration, and timing attacks
    */
   public async loginSession(
     rawSessionId: string,
@@ -194,8 +254,14 @@ export class MultiSessionManager {
   ): Promise<{ manager: WhatsAppClientManager; sessionId: string }> {
     const sessionId = this.cleanSessionId(rawSessionId) || this.defaultSessionId;
 
+    // Check brute force lockout
+    if (this.isSessionLocked(sessionId)) {
+      throw new Error('Too many failed login attempts for this session. Temporarily locked for 15 minutes to protect your account.');
+    }
+
     if (!password || String(password).trim().length < 8) {
-      throw new Error('Password must be at least 8 characters long.');
+      this.recordFailedLogin(sessionId);
+      throw new Error('Invalid session name or password. Access denied.');
     }
 
     const trimmedPassword = String(password).trim();
@@ -204,8 +270,10 @@ export class MultiSessionManager {
     if (sessionId === this.defaultSessionId && this.adminPassword) {
       const match = this.compareHashes(trimmedPassword, this.adminPassword);
       if (!match) {
-        throw new Error('Invalid password for default session.');
+        this.recordFailedLogin(sessionId);
+        throw new Error('Invalid session name or password. Access denied.');
       }
+      this.clearFailedLogin(sessionId);
       const manager = await this.getOrLoadSession(sessionId);
       return { manager, sessionId };
     }
@@ -219,7 +287,7 @@ export class MultiSessionManager {
       .maybeSingle();
 
     if (error || !metaRecord || !metaRecord.encrypted_payload) {
-      // Check if session has credentials but no metadata (e.g., created earlier)
+      // Check legacy credentials
       const credsVaultId = `${sessionId}:creds`;
       const { data: credsRecord } = await this.supabase
         .from('wa_auth_vault')
@@ -228,11 +296,15 @@ export class MultiSessionManager {
         .maybeSingle();
 
       if (credsRecord && this.adminPassword && this.compareHashes(trimmedPassword, this.adminPassword)) {
+        this.clearFailedLogin(sessionId);
         const manager = await this.getOrLoadSession(sessionId);
         return { manager, sessionId };
       }
 
-      throw new Error(`Session "${sessionId}" does not exist. Please create a new session first.`);
+      // Timing-safe dummy comparison to mitigate timing attacks
+      this.compareHashes(this.hashPassword(trimmedPassword), this.hashPassword('dummy_constant_timing_hash'));
+      this.recordFailedLogin(sessionId);
+      throw new Error('Invalid session name or password. Access denied.');
     }
 
     try {
@@ -243,16 +315,16 @@ export class MultiSessionManager {
       const isMatch = this.compareHashes(targetHash, meta.passwordHash);
 
       if (!isMatch) {
-        throw new Error('Invalid password for this session.');
+        this.recordFailedLogin(sessionId);
+        throw new Error('Invalid session name or password. Access denied.');
       }
 
+      this.clearFailedLogin(sessionId);
       const manager = await this.getOrLoadSession(sessionId);
       return { manager, sessionId };
     } catch (parseErr: any) {
-      if (parseErr.message.includes('Invalid password')) {
-        throw parseErr;
-      }
-      throw new Error('Session authentication failed.');
+      this.recordFailedLogin(sessionId);
+      throw new Error('Invalid session name or password. Access denied.');
     }
   }
 

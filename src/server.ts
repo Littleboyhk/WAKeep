@@ -30,7 +30,15 @@ app.set('trust proxy', 1);
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Mandatory 8-character minimum admin password (supports ADMIN_PASSWORD or legacy ADMIN_PIN)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.ADMIN_PIN || 'wakeep#2026';
+let ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.ADMIN_PIN;
+if (!ADMIN_PASSWORD) {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('⚠️ [Security Alert] No ADMIN_PASSWORD set in production! Generating a cryptographically random fallback secret.');
+    ADMIN_PASSWORD = crypto.randomBytes(16).toString('hex');
+  } else {
+    ADMIN_PASSWORD = 'wakeep#2026';
+  }
+}
 
 if (ADMIN_PASSWORD.length < 8) {
   console.warn(`⚠️ [Security Alert] Configured ADMIN_PASSWORD is too short (${ADMIN_PASSWORD.length} chars). Mandatory minimum is 8 characters!`);
@@ -107,7 +115,8 @@ app.use(cookieParser());
 // Rate Limiting on Login / Session creation to prevent brute force attacks
 const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit each IP to 20 attempts per window
+  max: 15, // Limit each IP to 15 attempts per window
+  skipSuccessfulRequests: true, // Do not penalize successful authentications
   message: { error: 'Too many authentication attempts. Please try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false
