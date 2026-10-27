@@ -1,6 +1,7 @@
 {
   "name": "wakeep",
   "version": "1.0.0",
+  "type": "module",
   "description": "WAKeep - 24/7 Persistent WhatsApp Web Bridge with Encrypted Supabase Vault",
   "main": "dist/server.js",
   "scripts": {

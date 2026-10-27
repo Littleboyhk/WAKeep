@@ -7,7 +7,7 @@ import {
   proto,
   SignalDataTypeMap
 } from '@whiskeysockets/baileys';
-import { decryptPayload, encryptPayload } from '../utils/crypto';
+import { decryptPayload, encryptPayload } from '../utils/crypto.js';
 
 interface SupabaseAuthVaultRow {
   id: string;

@@ -7,9 +7,10 @@ import helmet from 'helmet';
 import http from 'http';
 import jwt from 'jsonwebtoken';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { Server as SocketIOServer } from 'socket.io';
 import { createClient } from '@supabase/supabase-js';
-import { WhatsAppClientManager } from './services/whatsappClient';
+import { WhatsAppClientManager } from './services/whatsappClient.js';
 
 dotenv.config();
 
@@ -247,6 +248,8 @@ app.get('/api/session/messages', requirePinAuth, async (_req: Request, res: Resp
 // ----------------------------------------------------------------------------
 // Static Assets & Single Page Application Serving
 // ----------------------------------------------------------------------------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const publicDir = path.join(__dirname, '../public');
 app.use(express.static(publicDir));
 

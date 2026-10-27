@@ -11,7 +11,7 @@ import makeWASocket, {
 import pino from 'pino';
 import QRCode from 'qrcode';
 import { Server as SocketIOServer } from 'socket.io';
-import { SupabaseAuthStateResult, useSupabaseAuthState } from '../lib/supabaseAuthState';
+import { SupabaseAuthStateResult, useSupabaseAuthState } from '../lib/supabaseAuthState.js';
 
 export type SessionConnectionStatus =
   | 'idle'
