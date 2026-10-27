@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WAKeep - 24/7 Persistent WhatsApp Web Bridge</title>
-  <meta name="description" content="Production-ready 24/7 WhatsApp Web gateway with AES-256-GCM encrypted Supabase session vault and live chat console.">
+  <meta name="description" content="Never get logged out of WhatsApp Web again. 24/7 persistent companion gateway with encrypted Supabase vault.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -28,13 +28,6 @@
               700: '#047857',
               800: '#065f46',
               900: '#064e3b',
-            },
-            surface: {
-              darkest: '#080d1a',
-              card: '#0f172a',
-              panel: '#1e293b',
-              border: '#334155',
-              hover: '#273549'
             }
           }
         }
@@ -42,570 +35,532 @@
     }
   </script>
   <style>
-    /* Custom Scrollbars */
+    /* Grid background inspired by flezen / modern minimal SaaS */
+    .grid-bg {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    }
+    .dark .grid-bg {
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    }
+    .grid-fade-mask {
+      mask-image: radial-gradient(circle at 50% 30%, black 50%, transparent 95%);
+      -webkit-mask-image: radial-gradient(circle at 50% 30%, black 50%, transparent 95%);
+    }
+    /* Subtle custom scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #0f172a;
+      background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: #334155;
+      background: #cbd5e1;
       border-radius: 9999px;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #10b981;
-    }
-    @keyframes pulse-subtle {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.85; transform: scale(1.02); }
-    }
-    .pulse-glow {
-      animation: pulse-subtle 3s infinite ease-in-out;
-    }
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(51, 65, 85, 0.6);
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
     }
   </style>
 </head>
-<body class="bg-surface-darkest text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white flex flex-col">
+<body class="bg-white dark:bg-[#090d16] text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white transition-colors duration-200 relative overflow-x-hidden">
+
+  <!-- BACKGROUND GRID -->
+  <div class="fixed inset-0 grid-bg grid-fade-mask pointer-events-none z-0"></div>
 
   <!-- ========================================================================= -->
-  <!-- PIN LOCK SCREEN (MODAL / OVERLAY) -->
+  <!-- NAVIGATION BAR (Inspired by flezen.net) -->
   <!-- ========================================================================= -->
-  <div id="pinGateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-surface-darkest/95 backdrop-blur-xl p-4 transition-all duration-300">
-    <div class="glass-panel w-full max-w-md p-8 rounded-3xl shadow-2xl shadow-emerald-950/20 text-center relative overflow-hidden">
-      <!-- Glow decoration -->
-      <div class="absolute -top-24 -left-24 w-48 h-48 bg-brand-500/15 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-teal-500/15 rounded-full blur-3xl pointer-events-none"></div>
-
-      <!-- Icon -->
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-brand-400 mb-6 shadow-lg shadow-brand-500/10">
-        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-        </svg>
-      </div>
-
-      <h1 class="text-2xl font-extrabold text-white tracking-tight mb-2">WAKeep</h1>
-      <p class="text-sm text-slate-400 mb-8">Personal 24/7 WhatsApp Web Bridge</p>
-
-      <form id="pinLoginForm" class="space-y-5" onsubmit="handlePinLogin(event)">
-        <div class="text-left">
-          <label for="adminPinInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Enter Admin PIN</label>
-          <div class="relative">
-            <input
-              type="password"
-              id="adminPinInput"
-              name="adminPinInput"
-              required
-              maxlength="32"
-              placeholder="••••"
-              class="w-full text-center text-2xl tracking-[0.4em] font-mono py-3.5 px-4 bg-surface-card border border-surface-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-white placeholder-slate-600 transition"
-              autocomplete="current-password"
-              autofocus
-            />
-            <button
-              type="button"
-              onclick="togglePinVisibility()"
-              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition p-1"
-              title="Toggle PIN Visibility"
-            >
-              <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-          </div>
-          <div id="pinErrorMessage" class="text-xs text-rose-400 mt-2 min-h-[1.25rem] font-medium hidden"></div>
+  <header class="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <div class="h-16 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+      
+      <!-- Brand Logo -->
+      <a href="/" class="flex items-center gap-2.5 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.28-2.42 5.84a8.18 8.18 0 01-5.82 2.41c-1.42 0-2.82-.37-4.06-1.08l-.29-.17-3.02.79.81-2.94-.19-.31a8.186 8.186 0 01-1.25-4.54c0-4.54 3.7-8.24 8.24-8.24m4.52 11.64c-.25-.13-1.47-.72-1.7-.81-.23-.08-.4-.13-.57.13-.17.25-.66.81-.81.98-.15.17-.3.19-.55.06-.25-.13-1.07-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.3.38-.45.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.37-.78-1.88-.2-.49-.41-.43-.57-.44l-.49-.01c-.17 0-.44.06-.67.32-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.72 4.31 3.81.6.26 1.07.42 1.44.54.61.19 1.16.17 1.6.1.49-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.3"/>
+          </svg>
         </div>
+        <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">WAKeep</span>
+      </a>
 
+      <!-- Navigation Links -->
+      <nav class="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <a href="#howItWorks" class="hover:text-slate-900 dark:hover:text-white transition">How it works</a>
+        <a href="#security" class="hover:text-slate-900 dark:hover:text-white transition">AES-256 Vault</a>
+        <a href="#faq" class="hover:text-slate-900 dark:hover:text-white transition">FAQ</a>
+        <a href="/api/health" target="_blank" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Health API</span>
+        </a>
+      </nav>
+
+      <!-- Right Controls -->
+      <div class="flex items-center gap-3">
+        <!-- Theme Switcher -->
         <button
-          type="submit"
-          id="unlockBtn"
-          class="w-full py-3.5 px-6 rounded-xl font-semibold bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white shadow-lg shadow-brand-600/25 active:scale-[0.99] transition duration-200 flex items-center justify-center gap-2"
+          type="button"
+          onclick="toggleTheme()"
+          class="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition"
+          title="Toggle Light / Dark Mode"
         >
-          <span id="unlockBtnLabel">Unlock Control Center</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          <svg id="themeIconSun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg id="themeIconMoon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
         </button>
-      </form>
 
-      <div class="mt-8 pt-6 border-t border-surface-border/50 text-xs text-slate-400 flex items-center justify-center gap-2">
-        <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-        <span>AES-256-GCM Vault Protection</span>
+        <!-- Lock / Unlock Quick Pill -->
+        <button
+          id="navActionBtn"
+          onclick="scrollToConsole()"
+          class="px-4 py-2 rounded-full text-xs font-semibold bg-slate-900 hover:bg-black text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 shadow-sm transition active:scale-95"
+        >
+          Open Console
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- HERO SECTION (Inspired by flezen.net minimal hero) -->
+  <!-- ========================================================================= -->
+  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20">
+
+    <!-- Top Badge Pill -->
+    <div class="flex justify-center mb-6">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur shadow-sm text-xs font-semibold text-slate-600 dark:text-slate-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Persistent 24/7 Companion Engine</span>
+        <span class="text-slate-400 dark:text-slate-500">&rarr;</span>
       </div>
     </div>
-  </div>
 
-  <!-- ========================================================================= -->
-  <!-- MAIN APPLICATION DASHBOARD -->
-  <!-- ========================================================================= -->
-  <div id="mainDashboard" class="hidden flex-1 flex flex-col">
+    <!-- Big Headline -->
+    <div class="text-center max-w-3xl mx-auto">
+      <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.12]">
+        WAKeep WhatsApp Web.<br>
+        <span class="text-slate-400 dark:text-slate-500 font-medium">Never get logged out again.</span>
+      </h1>
+      <p class="mt-6 text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+        Stop re-scanning QR codes every 6 hours. WAKeep anchors your session in an encrypted Supabase vault with automatic 25s heartbeats — free, lightweight, and permanent.
+      </p>
+    </div>
 
-    <!-- TOP NAVIGATION & STATUS BAR -->
-    <header class="glass-panel sticky top-0 z-40 border-b border-surface-border/80">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+    <!-- ======================================================================= -->
+    <!-- INTERACTIVE FLEZEN-STYLE CAPSULE (PIN GATE / STATUS BAR) -->
+    <!-- ======================================================================= -->
+    <div class="mt-10 max-w-xl mx-auto">
 
-        <!-- Brand Identifier -->
-        <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-brand-600 to-teal-400 flex items-center justify-center shadow-lg shadow-brand-500/20 text-white font-bold">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2m.01 1.67c4.54 0 8.24 3.7 8.24 8.24 0 2.2-.86 4.28-2.42 5.84a8.18 8.18 0 01-5.82 2.41c-1.42 0-2.82-.37-4.06-1.08l-.29-.17-3.02.79.81-2.94-.19-.31a8.186 8.186 0 01-1.25-4.54c0-4.54 3.7-8.24 8.24-8.24m4.52 11.64c-.25-.13-1.47-.72-1.7-.81-.23-.08-.4-.13-.57.13-.17.25-.66.81-.81.98-.15.17-.3.19-.55.06-.25-.13-1.07-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.3.38-.45.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.37-.78-1.88-.2-.49-.41-.43-.57-.44l-.49-.01c-.17 0-.44.06-.67.32-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.78 2.72 4.31 3.81.6.26 1.07.42 1.44.54.61.19 1.16.17 1.6.1.49-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.3"/>
-            </svg>
-          </div>
+      <!-- When Locked: Clean Pill Input Capsule -->
+      <div id="heroLockCard" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/90 rounded-full p-2 pl-6 shadow-xl shadow-slate-200/50 dark:shadow-black/60 flex items-center justify-between gap-3 transition">
+        <div class="flex-1 flex items-center gap-2">
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <input
+            type="password"
+            id="heroPinInput"
+            maxlength="32"
+            placeholder="Enter Admin PIN to unlock..."
+            class="w-full bg-transparent border-none text-slate-900 dark:text-white placeholder-slate-400 text-sm font-mono tracking-widest focus:outline-none"
+            onkeydown="if(event.key === 'Enter') handleHeroPinSubmit()"
+          />
+        </div>
+        <button
+          type="button"
+          id="heroUnlockBtn"
+          onclick="handleHeroPinSubmit()"
+          class="px-6 py-3 rounded-full text-xs font-semibold bg-slate-900 hover:bg-black text-white dark:bg-brand-600 dark:hover:bg-brand-500 shadow-md transition active:scale-95 flex items-center gap-2 whitespace-nowrap"
+        >
+          <span>Unlock</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Error message for PIN -->
+      <div id="heroPinError" class="text-xs text-rose-500 text-center mt-2.5 font-medium hidden"></div>
+
+      <!-- Telemetry Subtext -->
+      <p class="text-center text-xs text-slate-400 dark:text-slate-500 mt-4">
+        Default PIN is <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-slate-700 dark:text-slate-300 font-bold">4928</code> &bull; Changeable in your Render environment
+      </p>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- UNLOCKED DASHBOARD CONSOLE (Appears once PIN is verified) -->
+    <!-- ======================================================================= -->
+    <div id="unlockedConsole" class="hidden mt-16 max-w-5xl mx-auto space-y-8 transition-all duration-300">
+
+      <!-- Live Status Banner -->
+      <div class="bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xl shadow-slate-200/40 dark:shadow-black/40 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div id="statusDot" class="w-3.5 h-3.5 rounded-full bg-amber-400 animate-pulse"></div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-bold text-white text-lg tracking-tight">WAKeep</span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20">24/7 GATE</span>
+              <span id="statusLabel" class="text-sm font-bold text-slate-900 dark:text-white">Connecting...</span>
+              <span id="userPhoneBadge" class="hidden text-xs font-mono px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold border border-brand-500/20"></span>
             </div>
-            <p class="text-xs text-slate-400">Persistent WhatsApp Web Bridge</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Cloud Web Gateway &bull; Singapore Region</p>
           </div>
         </div>
 
-        <!-- Live Connection Status Pill -->
-        <div class="hidden md:flex items-center gap-3">
-          <div id="statusBadge" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-surface-border bg-surface-card text-xs font-semibold text-slate-300">
-            <span id="statusIndicatorDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="statusText">Initializing...</span>
+        <!-- Telemetry Metrics -->
+        <div class="flex items-center gap-5 text-xs">
+          <div class="text-right">
+            <span class="block text-slate-400 text-[10px] uppercase font-semibold">Uptime</span>
+            <span id="liveUptime" class="font-mono font-bold text-slate-800 dark:text-slate-200">00:00:00</span>
           </div>
-
-          <div id="phoneBadge" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-full border border-brand-500/30 bg-brand-950/30 text-xs font-mono text-brand-300">
-            <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
-            <span id="phoneText">+0000000000</span>
+          <div class="text-right">
+            <span class="block text-slate-400 text-[10px] uppercase font-semibold">Memory</span>
+            <span id="liveRam" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">0.0 MB</span>
           </div>
-        </div>
-
-        <!-- Header Actions -->
-        <div class="flex items-center gap-2.5">
           <button
-            onclick="sendTestPing()"
-            id="pingBtnHeader"
-            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-card border border-surface-border hover:border-brand-500/50 hover:text-brand-300 text-slate-300 transition"
-            title="Dispatch a test ping message to the linked phone"
+            onclick="lockConsole()"
+            class="px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition"
           >
-            <span>🏓</span>
-            <span>Test Ping</span>
+            Lock
           </button>
-
-          <button
-            onclick="confirmResetVault()"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-card border border-surface-border hover:border-rose-500/50 hover:text-rose-400 text-slate-400 transition"
-            title="Wipe Supabase credentials and start fresh setup"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span class="hidden sm:inline">Reset Vault</span>
-          </button>
-
-          <button
-            onclick="handleLogout()"
-            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-card border border-surface-border hover:bg-surface-hover text-slate-300 transition"
-            title="Lock Dashboard"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>Lock</span>
-          </button>
-        </div>
-
-      </div>
-    </header>
-
-    <!-- TELEMETRY RIBBON -->
-    <div class="bg-surface-card/60 border-b border-surface-border/50 py-2.5 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-y-2 gap-x-6 text-xs text-slate-400">
-        <div class="flex items-center gap-6">
-          <div class="flex items-center gap-1.5">
-            <span class="text-slate-400">Uptime:</span>
-            <span id="telemetryUptime" class="font-mono text-slate-200 font-semibold">00:00:00</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-slate-400">RAM:</span>
-            <span id="telemetryRam" class="font-mono text-slate-200 font-semibold">0.0 MB</span>
-            <span class="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.2 rounded bg-emerald-950/60 border border-emerald-800/40">&lt; 70MB FREE TIER</span>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            <span class="text-slate-300">Keep-Alive Ping: <span class="font-mono text-emerald-400 font-semibold">25s</span></span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
-            <span class="text-slate-300">Vault: <span class="font-semibold text-teal-400">AES-256-GCM</span></span>
-          </div>
         </div>
       </div>
-    </div>
 
-    <!-- MAIN BODY CONTAINER -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 flex flex-col">
+      <!-- ONE-TIME AUTH SECTION (If waiting for QR or Pairing) -->
+      <div id="pairingSection" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-xl">
+        <div class="text-center max-w-lg mx-auto mb-8">
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">One-Time WhatsApp Link</h2>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Choose whether to scan the QR code with your camera or link with your phone number directly.
+          </p>
+        </div>
 
-      <!-- =================================================================== -->
-      <!-- SETUP PANEL: QR CODE & 8-CHAR PAIRING CODE (When Logged Out) -->
-      <!-- =================================================================== -->
-      <section id="setupSection" class="w-full max-w-4xl mx-auto my-auto py-6">
-        <div class="glass-panel rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
-          <!-- Background ambient light -->
-          <div class="absolute -top-32 -left-32 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          <div class="absolute -bottom-32 -right-32 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <!-- Tab Switcher -->
+        <div class="flex justify-center mb-8">
+          <div class="inline-flex p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              id="qrTabBtn"
+              onclick="selectPairingTab('qr')"
+              class="px-5 py-2 rounded-full text-xs font-semibold transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
+            >
+              QR Code Scan
+            </button>
+            <button
+              type="button"
+              id="codeTabBtn"
+              onclick="selectPairingTab('code')"
+              class="px-5 py-2 rounded-full text-xs font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            >
+              8-Digit Phone Pairing Code
+            </button>
+          </div>
+        </div>
 
-          <div class="text-center max-w-2xl mx-auto mb-8">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 text-xs font-semibold uppercase tracking-wider mb-3">
-              One-Time Authentication
+        <!-- TAB 1: QR CODE -->
+        <div id="qrTabContent" class="flex flex-col items-center">
+          <div class="p-4 bg-white rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+            <div id="qrSpinner" class="w-64 h-64 flex flex-col items-center justify-center text-slate-400 gap-2">
+              <svg class="animate-spin h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              <span class="text-xs font-medium">Generating fresh QR...</span>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Link Your WhatsApp Account</h2>
-            <p class="text-sm text-slate-400 mt-2">
-              Scan the QR code or request an 8-character code to link with your phone number directly. Keys will be encrypted and saved to your Supabase Vault forever.
+            <img id="qrImg" src="" alt="WhatsApp QR" class="hidden w-64 h-64 object-contain rounded-xl select-none" />
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-4 text-center">
+            Open WhatsApp &rarr; <strong>Settings</strong> &rarr; <strong>Linked Devices</strong> &rarr; <strong>Link a Device</strong>
+          </p>
+        </div>
+
+        <!-- TAB 2: PAIRING CODE -->
+        <div id="codeTabContent" class="hidden max-w-md mx-auto space-y-5">
+          <div>
+            <label for="phoneNumberInput" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Enter Phone Number (with Country Code)
+            </label>
+            <div class="flex gap-2">
+              <input
+                type="tel"
+                id="phoneNumberInput"
+                name="phoneNumberInput"
+                placeholder="14155552671"
+                class="flex-1 px-4 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <button
+                type="button"
+                id="requestCodeBtn"
+                onclick="submitRequestCode()"
+                class="px-5 py-2.5 rounded-full text-xs font-semibold bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition active:scale-95"
+              >
+                Get Code
+              </button>
+            </div>
+            <div id="codeError" class="text-xs text-rose-500 mt-2 hidden"></div>
+          </div>
+
+          <!-- Code Box -->
+          <div id="pairingCodeBox" class="hidden p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">8-Digit Pairing Code</span>
+            <div id="pairingCodeDisplay" class="font-mono text-3xl font-extrabold tracking-widest text-slate-900 dark:text-white py-2 select-all">
+              ---- ----
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              In WhatsApp &rarr; <strong>Linked Devices</strong> &rarr; <strong>Link with phone number instead</strong> &rarr; enter the code above.
             </p>
           </div>
-
-          <!-- Dual Auth Tab Selector -->
-          <div class="flex justify-center mb-8">
-            <div class="inline-flex p-1 rounded-2xl bg-surface-darkest border border-surface-border">
-              <button
-                type="button"
-                id="tabQrBtn"
-                onclick="switchAuthTab('qr')"
-                class="px-5 py-2.5 rounded-xl text-xs font-semibold transition duration-150 flex items-center gap-2 bg-brand-600 text-white shadow-md shadow-brand-600/30"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-                <span>Instant QR Code</span>
-              </button>
-              <button
-                type="button"
-                id="tabPairingBtn"
-                onclick="switchAuthTab('pairing')"
-                class="px-5 py-2.5 rounded-xl text-xs font-semibold transition duration-150 flex items-center gap-2 text-slate-400 hover:text-white"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <span>8-Digit Phone Pairing Code</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- TAB 1: QR CODE DISPLAY -->
-          <div id="tabQrContent" class="space-y-6">
-            <div class="flex flex-col items-center justify-center">
-              <div class="relative p-4 rounded-3xl bg-white shadow-2xl shadow-emerald-950/40 border-4 border-surface-border">
-                <div id="qrLoadingSpinner" class="w-64 h-64 flex flex-col items-center justify-center text-slate-800 gap-3">
-                  <svg class="animate-spin h-8 w-8 text-brand-600" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                  </svg>
-                  <span class="text-xs font-medium text-slate-600">Generating secure QR...</span>
-                </div>
-                <img id="qrImage" src="" alt="WhatsApp QR Code" class="hidden w-64 h-64 object-contain rounded-xl select-none" />
-              </div>
-
-              <!-- Steps Guide -->
-              <div class="mt-6 max-w-md w-full bg-surface-darkest/60 border border-surface-border/60 rounded-2xl p-4 text-xs text-slate-300">
-                <p class="font-bold text-white mb-2 flex items-center gap-1.5">
-                  <span class="w-4 h-4 rounded-full bg-brand-500 text-surface-darkest flex items-center justify-center font-extrabold text-[10px]">1</span>
-                  <span>How to scan from your phone:</span>
-                </p>
-                <ol class="list-decimal list-inside space-y-1 text-slate-400 pl-1">
-                  <li>Open WhatsApp on your primary phone</li>
-                  <li>Tap <strong class="text-slate-200">Menu (⋮)</strong> or <strong class="text-slate-200">Settings</strong> &rarr; <strong class="text-slate-200">Linked Devices</strong></li>
-                  <li>Tap <strong class="text-slate-200">Link a Device</strong> and point your camera here</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB 2: PHONE PAIRING CODE GENERATOR -->
-          <div id="tabPairingContent" class="hidden max-w-md mx-auto space-y-6">
-            <div class="bg-surface-darkest/70 border border-surface-border rounded-2xl p-6">
-              <label for="pairingPhoneInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-                Primary Phone Number (With Country Code)
-              </label>
-              <p class="text-xs text-slate-400 mb-3">No camera or second device needed. Enter numbers only (e.g., 14155552671 for US, 919876543210 for India).</p>
-              
-              <div class="flex gap-2">
-                <input
-                  type="tel"
-                  id="pairingPhoneInput"
-                  name="pairingPhoneInput"
-                  placeholder="14155552671"
-                  class="flex-1 px-4 py-3 bg-surface-card border border-surface-border rounded-xl text-white font-mono text-base focus:ring-2 focus:ring-brand-500 focus:outline-none transition"
-                />
-                <button
-                  type="button"
-                  id="requestPairingBtn"
-                  onclick="requestPairingCode()"
-                  class="px-5 py-3 rounded-xl font-semibold bg-brand-600 hover:bg-brand-500 text-white text-xs tracking-wide shadow-lg shadow-brand-600/20 active:scale-95 transition whitespace-nowrap"
-                >
-                  Get Code
-                </button>
-              </div>
-              <div id="pairingError" class="text-xs text-rose-400 mt-2 hidden font-medium"></div>
-
-              <!-- Display Area for Generated Pairing Code -->
-              <div id="pairingCodeBox" class="hidden mt-6 p-5 rounded-2xl bg-surface-card border border-brand-500/40 text-center">
-                <span class="text-[11px] font-semibold uppercase tracking-wider text-brand-400 block mb-2">Your 8-Character Pairing Code</span>
-                <div id="pairingCodeDisplay" class="font-mono text-3xl font-extrabold tracking-widest text-white py-2 select-all">
-                  ---- ----
-                </div>
-                <p class="text-xs text-slate-400 mt-2">
-                  Open WhatsApp on your phone &rarr; <strong>Linked Devices</strong> &rarr; <strong>Link with phone number instead</strong> &rarr; enter the code above.
-                </p>
-                <button
-                  type="button"
-                  onclick="copyPairingCode()"
-                  class="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-panel border border-surface-border hover:bg-surface-hover text-slate-200 transition"
-                >
-                  <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span id="copyCodeLabel">Copy Code</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
         </div>
-      </section>
 
-      <!-- =================================================================== -->
-      <!-- CONNECTED CHAT & CONSOLE INTERFACE (When Session is Active 24/7) -->
-      <!-- =================================================================== -->
-      <section id="chatSection" class="hidden flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
+      </div>
 
-        <!-- LEFT COLUMN: LIVE MESSAGES FEED (8 Cols) -->
-        <div class="lg:col-span-8 flex flex-col glass-panel rounded-3xl border border-surface-border overflow-hidden min-h-[500px] shadow-xl">
-          <!-- Chat Header -->
-          <div class="px-6 py-4 bg-surface-card border-b border-surface-border/80 flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
-              <h3 class="font-bold text-white text-sm">Live Message Stream</h3>
-              <span id="messageCountBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-surface-panel text-slate-300">0 msgs</span>
-            </div>
+      <!-- LIVE CHAT CONSOLE (Visible once WhatsApp is connected 24/7) -->
+      <div id="chatConsoleSection" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Messages Feed (8 Cols) -->
+        <div class="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden flex flex-col shadow-xl min-h-[500px]">
+          <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <button
-                onclick="loadRecentMessages()"
-                class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-surface-panel transition"
-                title="Refresh Chat History"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Recent Messages Feed</h3>
             </div>
+            <button
+              onclick="fetchChatHistory()"
+              class="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1"
+            >
+              <span>Refresh</span>
+            </button>
           </div>
 
-          <!-- Messages Scrollable Feed -->
-          <div id="messagesContainer" class="flex-1 p-6 space-y-3.5 overflow-y-auto max-h-[600px] bg-surface-darkest/40">
-            <div id="noMessagesPlaceholder" class="h-64 flex flex-col items-center justify-center text-slate-500 gap-2">
-              <svg class="w-10 h-10 stroke-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <p class="text-xs">No recent messages recorded yet. Send a message to see it appear live.</p>
+          <!-- Messages Stream -->
+          <div id="chatStream" class="flex-1 p-6 space-y-3 overflow-y-auto max-h-[520px] bg-slate-50/50 dark:bg-slate-950/40">
+            <div id="chatPlaceholder" class="h-48 flex flex-col items-center justify-center text-slate-400 gap-2">
+              <p class="text-xs">No recent messages recorded yet.</p>
             </div>
-          </div>
-
-          <!-- Feed Footer Info -->
-          <div class="px-6 py-2.5 bg-surface-card/60 border-t border-surface-border/50 text-[11px] text-slate-400 flex items-center justify-between">
-            <span>Synchronized with Supabase <code class="text-teal-400">wa_recent_messages</code></span>
-            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-brand-400"></span> WebSocket Live</span>
           </div>
         </div>
 
-        <!-- RIGHT COLUMN: MESSAGE DISPATCHER & CONTROL (4 Cols) -->
-        <div class="lg:col-span-4 flex flex-col gap-6">
-
-          <!-- Send Message Card -->
-          <div class="glass-panel rounded-3xl p-6 border border-surface-border shadow-xl">
-            <div class="flex items-center gap-2 mb-4">
-              <div class="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-400 flex items-center justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </div>
+        <!-- Quick Dispatcher (4 Cols) -->
+        <div class="lg:col-span-4 space-y-6">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-3">Quick Dispatcher</h3>
+            
+            <form id="quickSendForm" onsubmit="handleQuickSend(event)" class="space-y-3">
               <div>
-                <h3 class="font-bold text-white text-sm">Quick Dispatcher</h3>
-                <p class="text-[11px] text-slate-400">Send WhatsApp message instantly</p>
-              </div>
-            </div>
-
-            <form id="sendMessageForm" onsubmit="handleSendMessage(event)" class="space-y-4">
-              <div>
-                <label for="recipientInput" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1">
-                  Recipient Phone / JID
-                </label>
+                <label for="dispatchRecipientInput" class="block text-[11px] font-semibold text-slate-500 mb-1">Recipient Number / JID</label>
                 <input
                   type="text"
-                  id="recipientInput"
-                  name="recipientInput"
+                  id="dispatchRecipientInput"
+                  name="dispatchRecipientInput"
                   required
                   placeholder="14155552671"
-                  class="w-full px-3.5 py-2.5 bg-surface-card border border-surface-border rounded-xl text-white font-mono text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none transition"
+                  class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
-                <span class="text-[10px] text-slate-400 mt-1 block">Digits with country code, or format <code>...&#64;s.whatsapp.net</code></span>
               </div>
 
               <div>
-                <label for="messageTextInput" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1">
-                  Message Content
-                </label>
+                <label for="dispatchTextInput" class="block text-[11px] font-semibold text-slate-500 mb-1">Message Text</label>
                 <textarea
-                  id="messageTextInput"
-                  name="messageTextInput"
+                  id="dispatchTextInput"
+                  name="dispatchTextInput"
                   required
-                  rows="4"
-                  placeholder="Type your message here..."
-                  class="w-full px-3.5 py-2.5 bg-surface-card border border-surface-border rounded-xl text-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none transition"
+                  rows="3"
+                  placeholder="Type a message to send..."
+                  class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                 ></textarea>
               </div>
 
-              <div id="sendFeedback" class="text-xs min-h-[1rem] hidden font-medium"></div>
-
               <button
                 type="submit"
-                id="sendMsgBtn"
-                class="w-full py-2.5 px-4 rounded-xl font-semibold bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white text-xs shadow-md shadow-brand-600/20 active:scale-98 transition flex items-center justify-center gap-2"
+                id="quickSendBtn"
+                class="w-full py-2.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-black text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition shadow-sm"
               >
-                <span id="sendMsgBtnLabel">Send Message</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
+                Send WhatsApp Message
               </button>
             </form>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onclick="dispatchSelfPing()"
+                class="w-full py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
+              >
+                🏓 Send Test Ping to Myself
+              </button>
+            </div>
           </div>
 
-          <!-- Verification Test Card -->
-          <div class="glass-panel rounded-3xl p-6 border border-surface-border shadow-xl">
-            <h4 class="font-bold text-white text-xs uppercase tracking-wider mb-2 flex items-center gap-2">
-              <span>🛡️</span>
-              <span>Liveliness Diagnostic</span>
-            </h4>
-            <p class="text-xs text-slate-400 mb-4">
-              Send a self-addressed test ping message to your connected WhatsApp account to verify that the socket is alive and transmitting.
+          <!-- Reset Session Card -->
+          <div class="p-5 rounded-3xl border border-rose-200 dark:border-rose-950/60 bg-rose-50/50 dark:bg-rose-950/10 text-center">
+            <h4 class="text-xs font-bold text-rose-600 dark:text-rose-400">Reset Session Vault</h4>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 mb-3">
+              Wipes encrypted keys from Supabase and initiates a fresh QR scan.
             </p>
             <button
-              type="button"
-              onclick="sendTestPing()"
-              id="pingSelfBtn"
-              class="w-full py-2.5 px-4 rounded-xl font-medium bg-surface-card border border-surface-border hover:border-brand-500/50 hover:text-brand-300 text-slate-200 text-xs transition flex items-center justify-center gap-2"
+              onclick="triggerResetVault()"
+              class="px-4 py-1.5 rounded-full text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition shadow-sm"
             >
-              <span>🏓 Send Test Ping to Myself</span>
+              Reset Vault
             </button>
-            <div id="pingFeedback" class="text-xs mt-2 text-center text-slate-400 min-h-[1.25rem]"></div>
           </div>
-
-          <!-- Free Tier Specs Info Card -->
-          <div class="bg-surface-card/70 border border-surface-border/70 rounded-3xl p-5 text-xs text-slate-400 space-y-2.5">
-            <div class="flex items-center justify-between text-slate-300 font-semibold border-b border-surface-border/50 pb-2">
-              <span>Cloud Engine Configuration</span>
-              <span class="text-emerald-400 font-mono">Render / Koyeb</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Silent Logging:</span>
-              <span class="text-slate-200 font-mono">Pino silent</span>
-            </div>
-            <div class="flex justify-between">
-              <span>History Sync:</span>
-              <span class="text-slate-200 font-mono">syncFullHistory: false</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Browser Spoof:</span>
-              <span class="text-slate-200 font-mono">Ubuntu Chrome</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Keep-Alive Interval:</span>
-              <span class="text-emerald-400 font-mono">25,000 ms</span>
-            </div>
-          </div>
-
         </div>
 
-      </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="border-t border-surface-border/50 bg-surface-darkest py-4 px-4 sm:px-6 text-center text-xs text-slate-400">
-      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-        <p>WAKeep &bull; 24/7 Persistent WhatsApp Web Bridge</p>
-        <p class="font-mono text-[11px] text-slate-400">AES-256-GCM Vault &bull; Supabase Backend</p>
       </div>
-    </footer>
 
-  </div>
+    </div>
 
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
-    <div class="glass-panel border border-brand-500/40 text-slate-100 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
-      <span id="toastIcon">✨</span>
-      <span id="toastMessage" class="text-xs font-medium">Notification message</span>
+    <!-- ======================================================================= -->
+    <!-- HOW IT WORKS SECTION (Minimal Clean SaaS Cards) -->
+    <!-- ======================================================================= -->
+    <section id="howItWorks" class="mt-28 border-t border-slate-100 dark:border-slate-800 pt-16">
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Engineered for 24/7 Continuity
+        </h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+          How WAKeep keeps your companion session active without ever timing out.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Card 1 -->
+        <div class="p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm mb-5">
+            01
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">Steady 25s Heartbeats</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            WhatsApp drops sessions when companion tabs sleep. WAKeep emits steady cryptographic pings every 25 seconds, keeping the NAT pipeline permanently warm.
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-sm mb-5">
+            02
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">AES-256-GCM Supabase Vault</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Free cloud instances wipe their disks on restart. WAKeep encrypts your multi-device credentials before saving to Supabase PostgreSQL, restoring them instantly on reboot.
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm mb-5">
+            03
+          </div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">Zero Phone Silencing</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Using passive companion mode (<code class="font-mono text-emerald-600 dark:text-emerald-400">markOnlineOnConnect: false</code>), your phone still rings and gets push notifications normally.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- FAQ SECTION -->
+    <!-- ======================================================================= -->
+    <section id="faq" class="mt-24 border-t border-slate-100 dark:border-slate-800 pt-16 max-w-3xl mx-auto">
+      <h2 class="text-2xl font-bold text-center text-slate-900 dark:text-white mb-10">Frequently Asked Questions</h2>
+      
+      <div class="space-y-6 text-xs sm:text-sm">
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1.5">Does my phone need to stay on the same Wi-Fi?</h4>
+          <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+            No. WhatsApp Multi-Device protocol operates independently. Your phone can be on mobile data or anywhere in the world.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1.5">What happens when Render restarts?</h4>
+          <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+            WAKeep reads the encrypted keys from your Supabase vault, decrypts them in memory, and immediately resumes the session. You never need to scan the QR code again.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- FOOTER -->
+  <!-- ========================================================================= -->
+  <footer class="border-t border-slate-100 dark:border-slate-800/80 py-8 px-4 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>WAKeep &bull; 24/7 Persistent WhatsApp Web Bridge</p>
+      <p class="font-mono text-[11px] text-slate-400">Encrypted AES-256-GCM Vault &bull; Supabase Backend</p>
+    </div>
+  </footer>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="appToast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-2.5 rounded-full shadow-2xl text-xs font-semibold flex items-center gap-2">
+      <span id="toastDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      <span id="toastMsg">Notification</span>
     </div>
   </div>
 
-  <!-- SOCKET.IO CLIENT SCRIPT -->
+  <!-- SOCKET.IO CLIENT -->
   <script src="/socket.io/socket.io.js"></script>
 
-  <!-- CLIENT DASHBOARD LOGIC -->
+  <!-- APP SCRIPT -->
   <script>
-    // State Variables
     let authToken = localStorage.getItem('wakeep_token') || null;
     let socket = null;
-    let currentStatus = 'idle';
-    let uptimeTicker = null;
-    let serverUptimeSeconds = 0;
+    let uptimeSeconds = 0;
+    let uptimeInterval = null;
 
-    // Elements
-    const pinGateModal = document.getElementById('pinGateModal');
-    const mainDashboard = document.getElementById('mainDashboard');
-    const adminPinInput = document.getElementById('adminPinInput');
-    const pinErrorMessage = document.getElementById('pinErrorMessage');
-    const statusIndicatorDot = document.getElementById('statusIndicatorDot');
-    const statusText = document.getElementById('statusText');
-    const phoneBadge = document.getElementById('phoneBadge');
-    const phoneText = document.getElementById('phoneText');
-    const telemetryUptime = document.getElementById('telemetryUptime');
-    const telemetryRam = document.getElementById('telemetryRam');
-    const setupSection = document.getElementById('setupSection');
-    const chatSection = document.getElementById('chatSection');
-    const qrLoadingSpinner = document.getElementById('qrLoadingSpinner');
-    const qrImage = document.getElementById('qrImage');
-    const messagesContainer = document.getElementById('messagesContainer');
-    const noMessagesPlaceholder = document.getElementById('noMessagesPlaceholder');
-    const messageCountBadge = document.getElementById('messageCountBadge');
-
-    // On Page Load: Check authentication
+    // On Load
     window.addEventListener('DOMContentLoaded', async () => {
-      startUptimeTicker();
-      await checkAuthStatus();
+      // Check dark mode preference
+      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      startUptimeClock();
+      await verifyAuthentication();
     });
 
-    function togglePinVisibility() {
-      const type = adminPinInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      adminPinInput.setAttribute('type', type);
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
     }
 
-    // Authenticate with PIN
-    async function handlePinLogin(event) {
-      event.preventDefault();
-      const pin = adminPinInput.value;
-      const unlockBtnLabel = document.getElementById('unlockBtnLabel');
-      
-      pinErrorMessage.classList.add('hidden');
-      unlockBtnLabel.textContent = 'Verifying...';
+    function scrollToConsole() {
+      if (authToken) {
+        document.getElementById('unlockedConsole').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        document.getElementById('heroPinInput').focus();
+      }
+    }
+
+    // PIN Authentication
+    async function handleHeroPinSubmit() {
+      const pin = document.getElementById('heroPinInput').value.trim();
+      const errEl = document.getElementById('heroPinError');
+      const btn = document.getElementById('heroUnlockBtn');
+
+      errEl.classList.add('hidden');
+      if (!pin) {
+        errEl.textContent = 'Please enter your Admin PIN.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Verifying...</span>';
 
       try {
         const response = await fetch('/api/auth/login', {
@@ -613,69 +568,65 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pin })
         });
-
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Authentication failed');
+          throw new Error(data.error || 'Invalid PIN');
         }
 
         authToken = data.token;
         localStorage.setItem('wakeep_token', authToken);
-        showDashboard();
-        initSocket();
-        await fetchTelemetry();
-        showToast('🔓 Control Center Unlocked');
+        showUnlockedDashboard();
+        connectSocket();
+        await loadStatus();
+        showNotification('Control Console Unlocked');
       } catch (err) {
-        pinErrorMessage.textContent = err.message;
-        pinErrorMessage.classList.remove('hidden');
-        adminPinInput.focus();
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
       } finally {
-        unlockBtnLabel.textContent = 'Unlock Control Center';
+        btn.disabled = false;
+        btn.innerHTML = '<span>Unlock</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
       }
     }
 
-    async function checkAuthStatus() {
+    async function verifyAuthentication() {
+      if (!authToken) {
+        showLockedHero();
+        return;
+      }
+
       try {
         const response = await fetch('/api/auth/verify', {
-          headers: getAuthHeaders()
+          headers: { 'Authorization': `Bearer ${authToken}` }
         });
         const data = await response.json();
 
         if (data.authenticated) {
-          showDashboard();
-          initSocket();
-          await fetchTelemetry();
-          await loadRecentMessages();
+          showUnlockedDashboard();
+          connectSocket();
+          await loadStatus();
+          await fetchChatHistory();
         } else {
-          showPinGate();
+          showLockedHero();
         }
-      } catch (err) {
-        showPinGate();
+      } catch {
+        showLockedHero();
       }
     }
 
-    function getAuthHeaders() {
-      const headers = { 'Content-Type': 'application/json' };
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-      }
-      return headers;
+    function showLockedHero() {
+      document.getElementById('heroLockCard').classList.remove('hidden');
+      document.getElementById('unlockedConsole').classList.add('hidden');
+      document.getElementById('navActionBtn').textContent = 'Unlock Console';
     }
 
-    function showDashboard() {
-      pinGateModal.classList.add('hidden');
-      mainDashboard.classList.remove('hidden');
+    function showUnlockedDashboard() {
+      document.getElementById('heroLockCard').classList.add('hidden');
+      document.getElementById('unlockedConsole').classList.remove('hidden');
+      document.getElementById('navActionBtn').textContent = 'Live Console';
     }
 
-    function showPinGate() {
-      mainDashboard.classList.add('hidden');
-      pinGateModal.classList.remove('hidden');
-      adminPinInput.value = '';
-      adminPinInput.focus();
-    }
-
-    async function handleLogout() {
+    async function lockConsole() {
       try {
         await fetch('/api/auth/logout', { method: 'POST' });
       } catch {}
@@ -685,353 +636,292 @@
         socket.disconnect();
         socket = null;
       }
-      showPinGate();
-      showToast('🔒 Locked');
+      showLockedHero();
+      showNotification('Console Locked');
     }
 
-    // Switch Setup Tabs
-    function switchAuthTab(tab) {
-      const tabQrBtn = document.getElementById('tabQrBtn');
-      const tabPairingBtn = document.getElementById('tabPairingBtn');
-      const tabQrContent = document.getElementById('tabQrContent');
-      const tabPairingContent = document.getElementById('tabPairingContent');
-
-      if (tab === 'qr') {
-        tabQrBtn.className = 'px-5 py-2.5 rounded-xl text-xs font-semibold transition duration-150 flex items-center gap-2 bg-brand-600 text-white shadow-md shadow-brand-600/30';
-        tabPairingBtn.className = 'px-5 py-2.5 rounded-xl text-xs font-semibold transition duration-150 flex items-center gap-2 text-slate-400 hover:text-white';
-        tabQrContent.classList.remove('hidden');
-        tabPairingContent.classList.add('hidden');
-      } else {
-        tabPairingBtn.className = 'px-5 py-2.5 rounded-xl text-xs font-semibold transition duration-150 flex items-center gap-2 bg-brand-600 text-white shadow-md shadow-brand-600/30';
-        tabQrBtn.className = 'px-5 py-2.5 rounded-xl text-xs font-semibold transition duration-150 flex items-center gap-2 text-slate-400 hover:text-white';
-        tabPairingContent.classList.remove('hidden');
-        tabQrContent.classList.add('hidden');
-        document.getElementById('pairingPhoneInput').focus();
-      }
-    }
-
-    // Socket.io Real-Time Bridge
-    function initSocket() {
+    // Socket.io Real-Time Connection
+    function connectSocket() {
       if (socket) return;
-
-      socket = io({
-        auth: { token: authToken }
-      });
-
-      socket.on('connect', () => {
-        socket.emit('request_status');
-      });
+      socket = io({ auth: { token: authToken } });
 
       socket.on('session_status', (telemetry) => {
-        applyTelemetryUpdate(telemetry);
+        applyTelemetry(telemetry);
       });
 
       socket.on('new_message', (msg) => {
-        appendMessageCard(msg, true);
+        appendChatMessage(msg);
       });
     }
 
-    async function fetchTelemetry() {
+    async function loadStatus() {
       try {
         const response = await fetch('/api/session/status', {
-          headers: getAuthHeaders()
+          headers: { 'Authorization': `Bearer ${authToken}` }
         });
         if (response.ok) {
           const telemetry = await response.json();
-          applyTelemetryUpdate(telemetry);
+          applyTelemetry(telemetry);
         }
       } catch (err) {
-        console.error('Failed to fetch status:', err);
+        console.error('Failed to load status:', err);
       }
     }
 
-    function applyTelemetryUpdate(telemetry) {
-      currentStatus = telemetry.status;
-      serverUptimeSeconds = telemetry.uptimeSeconds || serverUptimeSeconds;
-
-      // RAM
-      if (telemetry.ramUsage) {
-        telemetryRam.textContent = `${telemetry.ramUsage.heapUsedMB} MB`;
+    function applyTelemetry(t) {
+      uptimeSeconds = t.uptimeSeconds || uptimeSeconds;
+      if (t.ramUsage) {
+        document.getElementById('liveRam').textContent = `${t.ramUsage.heapUsedMB} MB`;
       }
 
-      // Status indicator styles
-      statusIndicatorDot.className = 'w-2.5 h-2.5 rounded-full';
-      if (telemetry.status === 'connected') {
-        statusIndicatorDot.classList.add('bg-emerald-400');
-        statusText.textContent = 'Connected 24/7';
-        setupSection.classList.add('hidden');
+      const dot = document.getElementById('statusDot');
+      const label = document.getElementById('statusLabel');
+      const phoneBadge = document.getElementById('userPhoneBadge');
+      const pairingSection = document.getElementById('pairingSection');
+      const chatSection = document.getElementById('chatConsoleSection');
+
+      if (t.status === 'connected') {
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-emerald-500';
+        label.textContent = 'Connected 24/7';
+        pairingSection.classList.add('hidden');
         chatSection.classList.remove('hidden');
 
-        if (telemetry.user && telemetry.user.phone) {
+        if (t.user && t.user.phone) {
           phoneBadge.classList.remove('hidden');
-          phoneBadge.classList.add('flex');
-          phoneText.textContent = `+${telemetry.user.phone}`;
+          phoneBadge.textContent = `+${t.user.phone}`;
         }
-      } else if (telemetry.status === 'waiting_qr') {
-        statusIndicatorDot.classList.add('bg-amber-400', 'animate-pulse');
-        statusText.textContent = 'Waiting for QR Scan';
-        setupSection.classList.remove('hidden');
+      } else if (t.status === 'waiting_qr') {
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-amber-400 animate-pulse';
+        label.textContent = 'Waiting for QR Scan';
+        pairingSection.classList.remove('hidden');
         chatSection.classList.add('hidden');
-        phoneBadge.classList.add('hidden');
-      } else if (telemetry.status === 'pairing') {
-        statusIndicatorDot.classList.add('bg-teal-400', 'animate-pulse');
-        statusText.textContent = 'Awaiting Phone Link Code';
-        setupSection.classList.remove('hidden');
+      } else if (t.status === 'pairing') {
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-teal-400 animate-pulse';
+        label.textContent = 'Pairing with Phone Code...';
+        pairingSection.classList.remove('hidden');
         chatSection.classList.add('hidden');
-      } else if (telemetry.status === 'reconnecting') {
-        statusIndicatorDot.classList.add('bg-purple-400', 'animate-pulse');
-        statusText.textContent = `Reconnecting (${telemetry.reconnectAttempts || 1})...`;
-      } else if (telemetry.status === 'logged_out') {
-        statusIndicatorDot.classList.add('bg-rose-500');
-        statusText.textContent = 'Session Logged Out';
-        setupSection.classList.remove('hidden');
-        chatSection.classList.add('hidden');
+      } else if (t.status === 'reconnecting') {
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-purple-400 animate-pulse';
+        label.textContent = `Reconnecting (${t.reconnectAttempts || 1})...`;
       } else {
-        statusIndicatorDot.classList.add('bg-slate-400');
-        statusText.textContent = telemetry.status || 'Connecting...';
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-slate-400';
+        label.textContent = t.status || 'Connecting...';
       }
 
       // QR Image
-      if (telemetry.qrDataUrl) {
-        qrLoadingSpinner.classList.add('hidden');
-        qrImage.src = telemetry.qrDataUrl;
-        qrImage.classList.remove('hidden');
-      } else if (telemetry.status === 'waiting_qr') {
-        qrLoadingSpinner.classList.remove('hidden');
-        qrImage.classList.add('hidden');
+      const qrSpinner = document.getElementById('qrSpinner');
+      const qrImg = document.getElementById('qrImg');
+      if (t.qrDataUrl) {
+        qrSpinner.classList.add('hidden');
+        qrImg.src = t.qrDataUrl;
+        qrImg.classList.remove('hidden');
       }
 
       // Pairing Code
-      if (telemetry.pairingCode) {
-        displayPairingCode(telemetry.pairingCode);
+      if (t.pairingCode) {
+        showPairingCode(t.pairingCode);
       }
     }
 
-    function displayPairingCode(code) {
-      const pairingCodeBox = document.getElementById('pairingCodeBox');
-      const pairingCodeDisplay = document.getElementById('pairingCodeDisplay');
-      pairingCodeBox.classList.remove('hidden');
-      const formatted = code.length === 8 ? `${code.slice(0, 4)} - ${code.slice(4)}` : code;
-      pairingCodeDisplay.textContent = formatted;
+    function selectPairingTab(tab) {
+      const qrBtn = document.getElementById('qrTabBtn');
+      const codeBtn = document.getElementById('codeTabBtn');
+      const qrContent = document.getElementById('qrTabContent');
+      const codeContent = document.getElementById('codeTabContent');
+
+      if (tab === 'qr') {
+        qrBtn.className = 'px-5 py-2 rounded-full text-xs font-semibold transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm';
+        codeBtn.className = 'px-5 py-2 rounded-full text-xs font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+        qrContent.classList.remove('hidden');
+        codeContent.classList.add('hidden');
+      } else {
+        codeBtn.className = 'px-5 py-2 rounded-full text-xs font-semibold transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm';
+        qrBtn.className = 'px-5 py-2 rounded-full text-xs font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+        codeContent.classList.remove('hidden');
+        qrContent.classList.add('hidden');
+        document.getElementById('phoneNumberInput').focus();
+      }
     }
 
-    async function requestPairingCode() {
-      const phoneInput = document.getElementById('pairingPhoneInput');
-      const pairingError = document.getElementById('pairingError');
-      const requestPairingBtn = document.getElementById('requestPairingBtn');
-      const phoneNumber = phoneInput.value.trim();
+    async function submitRequestCode() {
+      const phone = document.getElementById('phoneNumberInput').value.trim();
+      const errEl = document.getElementById('codeError');
+      const btn = document.getElementById('requestCodeBtn');
 
-      pairingError.classList.add('hidden');
-      if (!phoneNumber) {
-        pairingError.textContent = 'Please enter your phone number with country code.';
-        pairingError.classList.remove('hidden');
+      errEl.classList.add('hidden');
+      if (!phone) {
+        errEl.textContent = 'Please enter your phone number with country code.';
+        errEl.classList.remove('hidden');
         return;
       }
 
-      requestPairingBtn.disabled = true;
-      requestPairingBtn.textContent = 'Requesting...';
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
 
       try {
         const response = await fetch('/api/session/pair', {
           method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ phoneNumber })
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ phoneNumber: phone })
         });
         const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to request pairing code');
-        }
-
-        displayPairingCode(data.code);
-        showToast('📲 8-Character Pairing Code Generated!');
+        if (!response.ok) throw new Error(data.error || 'Failed to request code');
+        showPairingCode(data.code);
+        showNotification('8-Digit Code Generated');
       } catch (err) {
-        pairingError.textContent = err.message;
-        pairingError.classList.remove('hidden');
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
       } finally {
-        requestPairingBtn.disabled = false;
-        requestPairingBtn.textContent = 'Get Code';
+        btn.disabled = false;
+        btn.textContent = 'Get Code';
       }
     }
 
-    function copyPairingCode() {
-      const codeText = document.getElementById('pairingCodeDisplay').textContent.replace(/\s|-/g, '');
-      navigator.clipboard.writeText(codeText).then(() => {
-        const label = document.getElementById('copyCodeLabel');
-        label.textContent = 'Copied!';
-        setTimeout(() => { label.textContent = 'Copy Code'; }, 2000);
-        showToast('📋 Copied pairing code to clipboard');
-      });
+    function showPairingCode(code) {
+      const box = document.getElementById('pairingCodeBox');
+      const display = document.getElementById('pairingCodeDisplay');
+      box.classList.remove('hidden');
+      display.textContent = code.length === 8 ? `${code.slice(0, 4)} - ${code.slice(4)}` : code;
     }
 
-    // Uptime ticker
-    function startUptimeTicker() {
-      if (uptimeTicker) clearInterval(uptimeTicker);
-      uptimeTicker = setInterval(() => {
-        serverUptimeSeconds += 1;
-        const days = Math.floor(serverUptimeSeconds / 86400);
-        const hours = Math.floor((serverUptimeSeconds % 86400) / 3600);
-        const mins = Math.floor((serverUptimeSeconds % 3600) / 60);
-        const secs = serverUptimeSeconds % 60;
-        
-        let formatted = '';
-        if (days > 0) formatted += `${days}d `;
-        formatted += `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        telemetryUptime.textContent = formatted;
-      }, 1000);
-    }
-
-    // Quick Send Message
-    async function handleSendMessage(event) {
-      event.preventDefault();
-      const recipient = document.getElementById('recipientInput').value.trim();
-      const text = document.getElementById('messageTextInput').value.trim();
-      const sendFeedback = document.getElementById('sendFeedback');
-      const sendMsgBtnLabel = document.getElementById('sendMsgBtnLabel');
-
-      sendFeedback.className = 'text-xs min-h-[1rem] hidden font-medium';
-      sendMsgBtnLabel.textContent = 'Sending...';
-
-      try {
-        const response = await fetch('/api/session/message', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ recipient, text })
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to dispatch message');
-        }
-
-        document.getElementById('messageTextInput').value = '';
-        sendFeedback.textContent = '✓ Message dispatched successfully!';
-        sendFeedback.className = 'text-xs text-brand-400 min-h-[1rem] block font-medium';
-        showToast('✓ Message Sent');
-        setTimeout(() => { sendFeedback.classList.add('hidden'); }, 3000);
-      } catch (err) {
-        sendFeedback.textContent = `✗ ${err.message}`;
-        sendFeedback.className = 'text-xs text-rose-400 min-h-[1rem] block font-medium';
-      } finally {
-        sendMsgBtnLabel.textContent = 'Send Message';
-      }
-    }
-
-    // Send Test Ping
-    async function sendTestPing() {
-      const pingFeedback = document.getElementById('pingFeedback');
-      if (pingFeedback) pingFeedback.textContent = 'Transmitting ping to self...';
-
-      try {
-        const response = await fetch('/api/session/ping', {
-          method: 'POST',
-          headers: getAuthHeaders()
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Ping failed');
-        }
-
-        if (pingFeedback) pingFeedback.textContent = '✓ Ping delivered to your phone!';
-        showToast('🏓 Ping Transmitted to Linked Phone');
-        setTimeout(() => { if (pingFeedback) pingFeedback.textContent = ''; }, 4000);
-      } catch (err) {
-        if (pingFeedback) pingFeedback.textContent = `✗ ${err.message}`;
-        showToast(`✗ Ping Failed: ${err.message}`);
-      }
-    }
-
-    // Reset Vault
-    async function confirmResetVault() {
-      const confirmed = confirm(
-        '⚠️ Are you sure you want to RESET THE VAULT?\n\nThis will wipe your encrypted WhatsApp credentials from Supabase and disconnect your session. You will need to scan a fresh QR code.'
-      );
-      if (!confirmed) return;
-
-      try {
-        showToast('🔄 Clearing Supabase Vault...');
-        const response = await fetch('/api/session/reset', {
-          method: 'POST',
-          headers: getAuthHeaders()
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to reset vault');
-
-        showToast('✓ Vault reset. Ready for new QR scan.');
-        await fetchTelemetry();
-      } catch (err) {
-        alert(`Error resetting vault: ${err.message}`);
-      }
-    }
-
-    // Load Recent Messages
-    async function loadRecentMessages() {
+    // Chat Feed
+    async function fetchChatHistory() {
       try {
         const response = await fetch('/api/session/messages', {
-          headers: getAuthHeaders()
+          headers: { 'Authorization': `Bearer ${authToken}` }
         });
         if (!response.ok) return;
 
         const data = await response.json();
         const msgs = data.messages || [];
 
-        messagesContainer.innerHTML = '';
+        const stream = document.getElementById('chatStream');
+        stream.innerHTML = '';
+
         if (msgs.length === 0) {
-          messagesContainer.appendChild(noMessagesPlaceholder);
-          messageCountBadge.textContent = '0 msgs';
+          stream.innerHTML = '<div class="h-48 flex items-center justify-center text-slate-400 text-xs">No recent messages recorded.</div>';
           return;
         }
 
-        messageCountBadge.textContent = `${msgs.length} msgs`;
-        // Chronological order (oldest first in list)
+        // Chronological
         const sorted = [...msgs].reverse();
         for (const msg of sorted) {
-          appendMessageCard(msg, false);
+          appendChatMessage(msg);
         }
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        stream.scrollTop = stream.scrollHeight;
       } catch (err) {
-        console.error('Failed to load recent messages:', err);
+        console.error('Failed to fetch messages:', err);
       }
     }
 
-    function appendMessageCard(msg, isLive) {
-      if (noMessagesPlaceholder.parentNode === messagesContainer) {
-        messagesContainer.removeChild(noMessagesPlaceholder);
-      }
+    function appendChatMessage(msg) {
+      const stream = document.getElementById('chatStream');
+      const placeholder = document.getElementById('chatPlaceholder');
+      if (placeholder) placeholder.remove();
 
-      const card = document.createElement('div');
       const isFromMe = msg.from_me;
-
-      card.className = `flex flex-col max-w-[85%] rounded-2xl p-3.5 text-xs transition duration-200 ${
+      const card = document.createElement('div');
+      card.className = `flex flex-col max-w-[80%] rounded-2xl p-3 text-xs shadow-sm ${
         isFromMe
-          ? 'ml-auto bg-gradient-to-r from-brand-700 to-teal-800 text-white rounded-br-xs shadow-md shadow-brand-900/30'
-          : 'mr-auto bg-surface-card border border-surface-border text-slate-200 rounded-bl-xs shadow-md'
+          ? 'ml-auto bg-slate-900 text-white dark:bg-brand-600 rounded-br-none'
+          : 'mr-auto bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-none'
       }`;
 
-      const senderLabel = isFromMe
-        ? 'You'
-        : (msg.sender_name || msg.sender_jid?.split('@')[0] || 'Sender');
-
-      const timeStr = msg.message_timestamp
+      const sender = isFromMe ? 'You' : (msg.sender_name || msg.sender_jid?.split('@')[0] || 'Sender');
+      const time = msg.message_timestamp
         ? new Date(msg.message_timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : 'Now';
 
       card.innerHTML = `
-        <div class="flex items-center justify-between gap-4 mb-1 text-[11px] font-semibold opacity-85">
-          <span class="${isFromMe ? 'text-brand-200' : 'text-emerald-400'}">${escapeHtml(senderLabel)}</span>
-          <span class="text-[10px] font-mono opacity-70">${timeStr}</span>
+        <div class="flex items-center justify-between gap-3 text-[10px] font-semibold opacity-75 mb-1">
+          <span>${escapeHtml(sender)}</span>
+          <span class="font-mono">${time}</span>
         </div>
         <p class="whitespace-pre-wrap break-words leading-relaxed">${escapeHtml(msg.text_content || '')}</p>
       `;
 
-      messagesContainer.appendChild(card);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      stream.appendChild(card);
+      stream.scrollTop = stream.scrollHeight;
+    }
 
-      if (isLive) {
-        const currentCount = parseInt(messageCountBadge.textContent) || 0;
-        messageCountBadge.textContent = `${currentCount + 1} msgs`;
+    async function handleQuickSend(e) {
+      e.preventDefault();
+      const recipient = document.getElementById('dispatchRecipientInput').value.trim();
+      const text = document.getElementById('dispatchTextInput').value.trim();
+      const btn = document.getElementById('quickSendBtn');
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        const response = await fetch('/api/session/message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ recipient, text })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to send');
+
+        document.getElementById('dispatchTextInput').value = '';
+        showNotification('Message Sent Successfully');
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send WhatsApp Message';
       }
+    }
+
+    async function dispatchSelfPing() {
+      try {
+        showNotification('Transmitting test ping...');
+        const res = await fetch('/api/session/ping', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Ping failed');
+        showNotification('🏓 Ping received on your phone!');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function triggerResetVault() {
+      const confirmReset = confirm('⚠️ Reset the Vault?\n\nThis will wipe your encrypted credentials from Supabase and require a fresh QR scan.');
+      if (!confirmReset) return;
+
+      try {
+        showNotification('Clearing Vault...');
+        const res = await fetch('/api/session/reset', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to reset');
+        showNotification('Vault cleared. Ready for fresh scan.');
+        await loadStatus();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function startUptimeClock() {
+      if (uptimeInterval) clearInterval(uptimeInterval);
+      uptimeInterval = setInterval(() => {
+        uptimeSeconds += 1;
+        const h = Math.floor(uptimeSeconds / 3600);
+        const m = Math.floor((uptimeSeconds % 3600) / 60);
+        const s = uptimeSeconds % 60;
+        document.getElementById('liveUptime').textContent = 
+          `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }, 1000);
     }
 
     function escapeHtml(str) {
@@ -1044,21 +934,19 @@
         .replace(/'/g, '&#039;');
     }
 
-    // Toast notifications
-    let toastTimeout = null;
-    function showToast(msg) {
-      const toast = document.getElementById('toastNotification');
-      const toastMessage = document.getElementById('toastMessage');
-      toastMessage.textContent = msg;
+    let toastTimer = null;
+    function showNotification(msg) {
+      const toast = document.getElementById('appToast');
+      document.getElementById('toastMsg').textContent = msg;
 
-      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.remove('translate-y-20', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
 
-      if (toastTimeout) clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        toast.classList.add('translate-y-24', 'opacity-0');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
         toast.classList.remove('translate-y-0', 'opacity-100');
-      }, 3500);
+      }, 3000);
     }
   </script>
 </body>
