@@ -292,17 +292,18 @@
     <!-- ======================================================================= -->
     <!-- HERO MULTI-SESSION HUB (When Locked) -->
     <!-- ======================================================================= -->
-    <div id="heroLockCard" class="mt-8 sm:mt-10 max-w-xl mx-auto w-full px-2">
+    <div id="heroLockCard" class="mt-8 sm:mt-10 max-w-xl mx-auto w-full px-0 sm:px-2">
       
       <!-- Real-Time Server Slots Badge (Real Backend Checked) -->
-      <div id="slotsCapacityBanner" class="mb-4 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-sm flex items-center justify-between gap-2 backdrop-blur">
-        <div class="flex items-center gap-2 shrink-0">
+      <div id="slotsCapacityBanner" class="mb-4 px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-sm flex items-center justify-between gap-2 backdrop-blur overflow-hidden">
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <span id="slotsDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
           <span class="font-bold text-slate-700 dark:text-slate-300 text-xs whitespace-nowrap">Server Capacity:</span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <span id="slotsCountBadge" class="font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] sm:text-xs whitespace-nowrap">
-            Slots Available
+          <span id="slotsCountBadge" class="font-mono font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] sm:text-xs whitespace-nowrap">
+            <span class="inline sm:hidden">Checking...</span>
+            <span class="hidden sm:inline">Checking slots...</span>
           </span>
           <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Backend Verified</span>
         </div>
@@ -318,7 +319,7 @@
               var rem = typeof d.slotsRemaining === 'number' ? d.slotsRemaining : null;
               var tot = d.totalSlots || 10;
               if (rem !== null) {
-                if (b) b.textContent = rem + ' of ' + tot + ' Slots Available';
+                if (b) b.innerHTML = '<span class="inline sm:hidden">' + rem + ' of ' + tot + ' Free</span><span class="hidden sm:inline">' + rem + ' of ' + tot + ' Slots Available</span>';
                 if (m) m.textContent = rem + ' of ' + tot + ' Slots Free';
               }
             }
@@ -1289,24 +1290,24 @@
       const mobileBadge = document.getElementById('mobileSlotsBadge');
 
       if (badge) {
-        badge.textContent = `${slotsRemaining} of ${totalSlots} Slots Available`;
+        badge.innerHTML = `<span class="inline sm:hidden">${slotsRemaining} of ${totalSlots} Free</span><span class="hidden sm:inline">${slotsRemaining} of ${totalSlots} Slots Available</span>`;
         if (slotsRemaining <= 0) {
-          badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs';
-          if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0';
+          badge.className = 'font-mono font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[11px] sm:text-xs whitespace-nowrap shrink-0';
+          if (dot) dot.className = 'w-2 h-2 rounded-full bg-rose-500 shrink-0';
           if (createBtn) {
             createBtn.disabled = true;
             createBtn.innerHTML = '<span>Server Capacity Full (0 Slots Left)</span>';
           }
         } else if (slotsRemaining <= 2) {
-          badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs';
-          if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0';
+          badge.className = 'font-mono font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[11px] sm:text-xs whitespace-nowrap shrink-0';
+          if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500 shrink-0';
           if (createBtn && createBtn.disabled && createBtn.textContent.includes('Full')) {
             createBtn.disabled = false;
             createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
           }
         } else {
-          badge.className = 'font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs';
-          if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0';
+          badge.className = 'font-mono font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] sm:text-xs whitespace-nowrap shrink-0';
+          if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0';
           if (createBtn && createBtn.disabled && createBtn.textContent.includes('Full')) {
             createBtn.disabled = false;
             createBtn.innerHTML = '<span>Generate My QR Code</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
@@ -1361,7 +1362,7 @@
         // Fallback gracefully so badge never hangs on "Checking..."
         const badge = document.getElementById('slotsCountBadge');
         if (badge && badge.textContent.includes('Checking')) {
-          badge.textContent = 'Slots Available';
+          badge.innerHTML = '<span class="inline sm:hidden">Slots Free</span><span class="hidden sm:inline">Slots Available</span>';
         }
         const mobileBadge = document.getElementById('mobileSlotsBadge');
         if (mobileBadge && mobileBadge.textContent.includes('Checking')) {
