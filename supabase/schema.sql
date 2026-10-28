@@ -1,92 +1,119 @@
 -- ============================================================================
--- WAKeep Database Schema
--- Run this script in your Supabase SQL Editor
+-- WAKeep Hardened Database Schema & Row Level Security (RLS) Configuration
+-- Run this script in your Supabase SQL Editor (South Asia Mumbai or your region)
 -- ============================================================================
 
--- Enable pgcrypto extension for secure UUIDs if needed
-create extension if not exists "pgcrypto";
-
 -- ----------------------------------------------------------------------------
--- Table 1: wa_auth_vault
--- Stores AES-256-GCM encrypted session credentials and signal keys
+-- 1. Table Creation: wa_auth_vault
+-- Stores AES-256-GCM encrypted multi-device companion tokens and pre-keys.
+-- Zero chat messages, audio, or media are stored.
 -- ----------------------------------------------------------------------------
-create table if not exists public.wa_auth_vault (
-    id text primary key,
-    encrypted_payload text not null,
-    updated_at timestamptz not null default timezone('utc'::text, now())
+CREATE TABLE IF NOT EXISTS public.wa_auth_vault (
+    id TEXT PRIMARY KEY,
+    encrypted_payload TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc'::TEXT, NOW()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc'::TEXT, NOW())
 );
 
--- Index for fast lookup by key id
-create index if not exists idx_wa_auth_vault_updated_at on public.wa_auth_vault (updated_at desc);
+-- Index for fast key lookup
+CREATE INDEX IF NOT EXISTS idx_wa_auth_vault_updated_at ON public.wa_auth_vault (updated_at DESC);
 
--- Auto-update updated_at timestamp on row modification
-create or replace function public.touch_updated_at()
-returns trigger as $$
-begin
-    new.updated_at = timezone('utc'::text, now());
-    return new;
-end;
-$$ language plpgsql;
+-- Automatic timestamp updater trigger
+CREATE OR REPLACE FUNCTION public.touch_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = TIMEZONE('utc'::TEXT, NOW());
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-drop trigger if exists trigger_touch_wa_auth_vault on public.wa_auth_vault;
-create trigger trigger_touch_wa_auth_vault
-    before update on public.wa_auth_vault
-    for each row
-    execute function public.touch_updated_at();
+DROP TRIGGER IF EXISTS trigger_touch_wa_auth_vault ON public.wa_auth_vault;
+CREATE TRIGGER trigger_touch_wa_auth_vault
+    BEFORE UPDATE ON public.wa_auth_vault
+    FOR EACH ROW
+    EXECUTE FUNCTION public.touch_updated_at();
 
 -- ----------------------------------------------------------------------------
--- Table 2: wa_recent_messages
--- Lightweight cache for the Web UI to render recent chat history instantly
+-- 2. Drop Legacy Message Table (Strict Zero Data Collection Compliance)
 -- ----------------------------------------------------------------------------
-create table if not exists public.wa_recent_messages (
-    id uuid primary key default gen_random_uuid(),
-    message_id text unique not null,
-    chat_jid text not null,
-    sender_jid text not null,
-    sender_name text,
-    from_me boolean not null default false,
-    text_content text not null default '',
-    message_timestamp bigint not null default 0,
-    created_at timestamptz not null default timezone('utc'::text, now())
-);
+DROP TABLE IF EXISTS public.wa_recent_messages CASCADE;
+DROP FUNCTION IF EXISTS public.prune_old_wa_messages CASCADE;
 
--- Indexes for lightning-fast queries
-create index if not exists idx_wa_messages_chat on public.wa_recent_messages (chat_jid);
-create index if not exists idx_wa_messages_timestamp on public.wa_recent_messages (message_timestamp desc);
-create index if not exists idx_wa_messages_created_at on public.wa_recent_messages (created_at desc);
+-- ----------------------------------------------------------------------------
+-- 3. Row Level Security (RLS) & Permission Lockdown
+-- ----------------------------------------------------------------------------
+-- Enable and force RLS on the vault table
+ALTER TABLE public.wa_auth_vault ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wa_auth_vault FORCE ROW LEVEL SECURITY;
 
--- Function to prune old messages keeping only recent 200 items to conserve database storage
-create or replace function public.prune_old_wa_messages()
-returns trigger as $$
-begin
-    delete from public.wa_recent_messages
-    where id in (
-        select id from public.wa_recent_messages
-        order by created_at desc
-        offset 200
-    );
-    return null;
-end;
-$$ language plpgsql;
+-- Revoke all direct privileges from public / unauthenticated / client roles
+REVOKE ALL ON TABLE public.wa_auth_vault FROM anon;
+REVOKE ALL ON TABLE public.wa_auth_vault FROM authenticated;
+REVOKE ALL ON TABLE public.wa_auth_vault FROM public;
 
-drop trigger if exists trigger_prune_wa_messages on public.wa_recent_messages;
-create trigger trigger_prune_wa_messages
-    after insert on public.wa_recent_messages
-    execute function public.prune_old_wa_messages();
+-- Grant access strictly and exclusively to service_role (used by WAKeep backend server)
+GRANT ALL ON TABLE public.wa_auth_vault TO service_role;
 
--- Enable Row Level Security (RLS)
-alter table public.wa_auth_vault enable row level security;
-alter table public.wa_recent_messages enable row level security;
+-- ----------------------------------------------------------------------------
+-- 4. Definitive RLS Policies
+-- ----------------------------------------------------------------------------
+-- Drop any previous or conflicting policies
+DROP POLICY IF EXISTS "Deny anon all access" ON public.wa_auth_vault;
+DROP POLICY IF EXISTS "Deny authenticated client all access" ON public.wa_auth_vault;
+DROP POLICY IF EXISTS "Service role has full access to auth vault" ON public.wa_auth_vault;
+DROP POLICY IF EXISTS "Service role full access" ON public.wa_auth_vault;
 
--- Policies:
--- Service role key has full access automatically.
--- For standard anon key with proper setup:
-create policy "Service role has full access to auth vault"
-    on public.wa_auth_vault
-    for all
-    using (auth.role() = 'service_role');
+-- Policy 1: Explicitly DENY all read, insert, update, and delete actions for anon role
+CREATE POLICY "Deny anon all access"
+    ON public.wa_auth_vault
+    FOR ALL
+    TO anon
+    USING (false)
+    WITH CHECK (false);
 
-create policy "Service role has full access to messages"
-    on public.wa_recent_messages
-    for all
-    using (auth.role() = 'service_role');
+-- Policy 2: Explicitly DENY all read, insert, update, and delete actions for authenticated clients
+CREATE POLICY "Deny authenticated client all access"
+    ON public.wa_auth_vault
+    FOR ALL
+    TO authenticated
+    USING (false)
+    WITH CHECK (false);
+
+-- Policy 3: Allow service_role complete access for backend synchronization
+CREATE POLICY "Service role full access"
+    ON public.wa_auth_vault
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+-- ============================================================================
+-- 5. RLS & Permission Verification Test Queries
+-- Copy and run these queries in Supabase SQL Editor to test permissions:
+-- ============================================================================
+/*
+-- TEST A: Attempting to READ (SELECT) as public anon role (Must return 0 rows or error)
+SET ROLE anon;
+SELECT * FROM public.wa_auth_vault;
+RESET ROLE;
+
+-- TEST B: Attempting to CREATE (INSERT) as public anon role (Must fail with permission/RLS violation)
+SET ROLE anon;
+INSERT INTO public.wa_auth_vault (id, encrypted_payload) VALUES ('test_hacked', 'dummy_payload');
+RESET ROLE;
+
+-- TEST C: Attempting to UPDATE as public anon role (Must affect 0 rows or fail)
+SET ROLE anon;
+UPDATE public.wa_auth_vault SET encrypted_payload = 'malicious' WHERE id = 'main_session:creds.json';
+RESET ROLE;
+
+-- TEST D: Attempting to DELETE as public anon role (Must affect 0 rows or fail)
+SET ROLE anon;
+DELETE FROM public.wa_auth_vault WHERE id = 'main_session:creds.json';
+RESET ROLE;
+
+-- TEST E: Verify service_role full access (Must succeed)
+SET ROLE service_role;
+SELECT COUNT(*) FROM public.wa_auth_vault;
+RESET ROLE;
+*/

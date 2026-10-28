@@ -127,14 +127,29 @@ Want 100% control over your own personal server and database? You can deploy you
 4. Click **New query**, paste the following SQL code, and click **Run**:
 
 ```sql
--- Create encrypted credentials vault table
+-- 1. Create encrypted credentials vault table
 -- (WAKeep collects ZERO messages and only stores encrypted multi-device auth tokens)
-CREATE TABLE IF NOT EXISTS wa_auth_vault (
+CREATE TABLE IF NOT EXISTS public.wa_auth_vault (
   id TEXT PRIMARY KEY,
   encrypted_payload TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 2. Lock down table with Row Level Security (RLS)
+ALTER TABLE public.wa_auth_vault ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wa_auth_vault FORCE ROW LEVEL SECURITY;
+
+-- 3. Revoke public/anon access & grant strictly to backend service_role
+REVOKE ALL ON TABLE public.wa_auth_vault FROM anon, authenticated, public;
+GRANT ALL ON TABLE public.wa_auth_vault TO service_role;
+
+CREATE POLICY "Service role full access"
+  ON public.wa_auth_vault
+  FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 ```
 
 5. Go to **Project Settings** (gear icon) &rarr; **API**:

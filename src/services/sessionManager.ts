@@ -29,6 +29,13 @@ export class MultiSessionManager {
   // Per-session brute-force lockout tracker (session -> { count, lockedUntil })
   private failedLoginAttempts = new Map<string, { count: number; lockedUntil: number }>();
 
+  /**
+   * Helper to escape SQL LIKE wildcard characters (_, %, \)
+   */
+  public static escapeLike(pattern: string): string {
+    return pattern.replace(/[_%\\]/g, '\\$&');
+  }
+
   constructor(options: {
     supabase: SupabaseClient;
     vaultSecret: string;
@@ -114,14 +121,14 @@ export class MultiSessionManager {
     console.log('[MultiSessionManager] Initializing Multi-Session Hub...');
 
     // Always start the primary default session
-    await this.getOrLoadSession(this.defaultSessionId);
+    await this.getOrLoadSession(this.defaultSessionId, true);
 
     // Discover any other sessions with stored credentials in Supabase
     try {
       const { data, error } = await this.supabase
         .from('wa_auth_vault')
         .select('id')
-        .like('id', '%:creds');
+        .like('id', '%:__session_meta');
 
       if (!error && data && data.length > 0) {
         for (const row of data) {
@@ -129,7 +136,7 @@ export class MultiSessionManager {
           const sid = parts[0];
           if (sid && sid !== this.defaultSessionId && !this.sessions.has(sid)) {
             console.log(`[MultiSessionManager] Restoring background keep-alive for registered session: ${sid}`);
-            await this.getOrLoadSession(sid);
+            await this.getOrLoadSession(sid, true);
           }
         }
       }
@@ -139,13 +146,43 @@ export class MultiSessionManager {
   }
 
   /**
-   * Retrieves an in-memory session manager, or restores it from Supabase
+   * Checks whether a session exists either in active memory or in Supabase vault
    */
-  public async getOrLoadSession(rawSessionId: string): Promise<WhatsAppClientManager> {
+  public async sessionExists(rawSessionId: string): Promise<boolean> {
+    const sessionId = this.cleanSessionId(rawSessionId) || this.defaultSessionId;
+    if (sessionId === this.defaultSessionId) return true;
+    if (this.sessions.has(sessionId)) return true;
+
+    try {
+      const metaVaultId = `${sessionId}:__session_meta`;
+      const { data } = await this.supabase
+        .from('wa_auth_vault')
+        .select('id')
+        .eq('id', metaVaultId)
+        .maybeSingle();
+
+      return Boolean(data);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Retrieves an in-memory session manager, or restores it from Supabase.
+   * If allowCreate is false and the session does not exist, throws an authorization/not-found error.
+   */
+  public async getOrLoadSession(rawSessionId: string, allowCreate = false): Promise<WhatsAppClientManager> {
     const sessionId = this.cleanSessionId(rawSessionId) || this.defaultSessionId;
 
     if (this.sessions.has(sessionId)) {
       return this.sessions.get(sessionId)!;
+    }
+
+    if (!allowCreate && sessionId !== this.defaultSessionId) {
+      const exists = await this.sessionExists(sessionId);
+      if (!exists) {
+        throw new Error(`Session "${sessionId}" does not exist or has been logged out.`);
+      }
     }
 
     const manager = new WhatsAppClientManager({
@@ -211,7 +248,7 @@ export class MultiSessionManager {
 
     // 2. Check if session metadata OR active credentials already exist in Supabase vault
     const metaVaultId = `${sessionId}:__session_meta`;
-    const credsVaultId = `${sessionId}:creds`;
+    const credsVaultId = `${sessionId}:creds.json`;
     const { data: existingRows } = await this.supabase
       .from('wa_auth_vault')
       .select('id')
@@ -239,7 +276,7 @@ export class MultiSessionManager {
     });
 
     // Initialize fresh WhatsApp client for this new session
-    const manager = await this.getOrLoadSession(sessionId);
+    const manager = await this.getOrLoadSession(sessionId, true);
 
     return { manager, sessionId };
   }
@@ -266,19 +303,22 @@ export class MultiSessionManager {
 
     const trimmedPassword = String(password).trim();
 
-    // Special check for primary default session (matches ADMIN_PASSWORD)
-    if (sessionId === this.defaultSessionId && this.adminPassword) {
+    // Primary admin session strictly verified with ADMIN_PASSWORD
+    if (sessionId === this.defaultSessionId) {
+      if (!this.adminPassword) {
+        throw new Error('Server administration password is not configured.');
+      }
       const match = this.compareHashes(trimmedPassword, this.adminPassword);
       if (!match) {
         this.recordFailedLogin(sessionId);
         throw new Error('Invalid session name or password. Access denied.');
       }
       this.clearFailedLogin(sessionId);
-      const manager = await this.getOrLoadSession(sessionId);
+      const manager = await this.getOrLoadSession(sessionId, true);
       return { manager, sessionId };
     }
 
-    // Retrieve encrypted session metadata
+    // Retrieve encrypted session metadata for regular user sessions
     const metaVaultId = `${sessionId}:__session_meta`;
     const { data: metaRecord, error } = await this.supabase
       .from('wa_auth_vault')
@@ -287,20 +327,6 @@ export class MultiSessionManager {
       .maybeSingle();
 
     if (error || !metaRecord || !metaRecord.encrypted_payload) {
-      // Check legacy credentials
-      const credsVaultId = `${sessionId}:creds`;
-      const { data: credsRecord } = await this.supabase
-        .from('wa_auth_vault')
-        .select('id')
-        .eq('id', credsVaultId)
-        .maybeSingle();
-
-      if (credsRecord && this.adminPassword && this.compareHashes(trimmedPassword, this.adminPassword)) {
-        this.clearFailedLogin(sessionId);
-        const manager = await this.getOrLoadSession(sessionId);
-        return { manager, sessionId };
-      }
-
       // Timing-safe dummy comparison to mitigate timing attacks
       this.compareHashes(this.hashPassword(trimmedPassword), this.hashPassword('dummy_constant_timing_hash'));
       this.recordFailedLogin(sessionId);
@@ -320,7 +346,7 @@ export class MultiSessionManager {
       }
 
       this.clearFailedLogin(sessionId);
-      const manager = await this.getOrLoadSession(sessionId);
+      const manager = await this.getOrLoadSession(sessionId, true);
       return { manager, sessionId };
     } catch (parseErr: any) {
       this.recordFailedLogin(sessionId);
@@ -372,7 +398,8 @@ export class MultiSessionManager {
       if (sessionId !== this.defaultSessionId) {
         await this.supabase.from('wa_auth_vault').delete().eq('id', `${sessionId}:__session_meta`);
       }
-      await this.supabase.from('wa_auth_vault').delete().like('id', `${sessionId}:%`);
+      const safePrefix = MultiSessionManager.escapeLike(sessionId);
+      await this.supabase.from('wa_auth_vault').delete().like('id', `${safePrefix}:%`);
     } catch (dbErr: any) {
       console.warn(`[MultiSessionManager] Non-fatal vault purge notice for [${sessionId}]:`, dbErr.message);
     }

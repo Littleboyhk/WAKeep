@@ -262,11 +262,11 @@ export async function useSupabaseAuthState(
     pendingWrites.clear();
     pendingDeletes.clear();
 
-    const prefix = `${sessionId}:`;
+    const safePrefix = sessionId.replace(/[_%\\]/g, '\\$&');
     const { error } = await supabase
       .from('wa_auth_vault')
       .delete()
-      .like('id', `${prefix}%`);
+      .like('id', `${safePrefix}:%`);
 
     if (error) {
       console.error('[SupabaseAuthState] Error clearing session vault:', error.message);
