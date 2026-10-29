@@ -240,19 +240,20 @@ export class WhatsAppClientManager {
 
         // When QR times out or session is unlinked/logged out (401), clean up stale creds
         // and immediately restart Baileys with fresh state so a fresh QR code is always emitted!
-        if (statusCode === DisconnectReason.loggedOut) {
-          console.warn(`[WhatsAppClient] Session [${this.sessionId}] logged out or QR timed out. Resetting auth state for fresh QR...`);
+        const isNotConnected = this.status !== 'connected';
+        if (statusCode === DisconnectReason.loggedOut || (isNotConnected && (statusCode === DisconnectReason.timedOut || statusCode === DisconnectReason.connectionClosed))) {
+          console.warn(`[WhatsAppClient] Session [${this.sessionId}] unlinked or QR timed out. Resetting auth state for fresh QR...`);
           this.status = 'waiting_qr';
           this.broadcastStatus();
 
-          if (this.authStateResult) {
+          if (this.authStateResult && isNotConnected) {
             this.authStateResult.clearVault().catch((clearErr: any) => {
               console.warn('[WhatsAppClient] Non-fatal vault clear notice:', clearErr.message);
             });
           }
 
-          // Restart cleanly in 1.5 seconds to regenerate fresh QR code immediately
-          this.scheduleReconnect(1500);
+          // Restart cleanly in 1.0 second to regenerate fresh QR code immediately
+          this.scheduleReconnect(1000);
           return;
         }
 
@@ -267,8 +268,13 @@ export class WhatsAppClientManager {
     if (this.reconnectTimer) return;
 
     this.reconnectAttempts += 1;
-    // Exponential backoff capped at 25 seconds unless explicitly specified
-    const delay = delayMs !== undefined ? delayMs : Math.min(1500 * Math.pow(1.3, this.reconnectAttempts), 25000);
+    const isWaitingForQr = this.status !== 'connected';
+    // If waiting for QR code to be scanned, always reconnect fast (1s) so a new QR is ready without delay!
+    const delay = delayMs !== undefined 
+      ? delayMs 
+      : isWaitingForQr 
+        ? 1000 
+        : Math.min(1500 * Math.pow(1.3, this.reconnectAttempts), 25000);
     console.log(`[WhatsAppClient] Reconnecting [${this.sessionId}] in ${(delay / 1000).toFixed(1)}s (attempt ${this.reconnectAttempts})...`);
 
     this.reconnectTimer = setTimeout(() => {

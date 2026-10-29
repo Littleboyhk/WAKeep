@@ -660,11 +660,11 @@
           <div class="flex flex-col sm:flex-row items-center gap-2 mt-3.5">
             <!-- Active QR Reset Countdown Timer -->
             <div id="qrTimerBadge" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shadow-sm">
-              <span class="relative flex h-2 w-2">
+              <span id="qrTimerDot" class="relative flex h-2 w-2">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span>Resets in <span id="qrTimerCount" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">20</span>s</span>
+              <span id="qrTimerLabel">Resets in <span id="qrTimerCount" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">20</span>s</span>
             </div>
 
             <button
@@ -1784,6 +1784,7 @@
     let qrTimeLeft = 20;
     const QR_REFRESH_CYCLE_SEC = 20;
     let lastSeenQr = null;
+    let isAutoRefreshingQr = false;
 
     function startQrCountdown(seconds = QR_REFRESH_CYCLE_SEC) {
       stopQrCountdown();
@@ -1792,27 +1793,95 @@
       const countEl = document.getElementById('qrTimerCount');
       const progressContainer = document.getElementById('qrProgressBarContainer');
       const progressBar = document.getElementById('qrProgressBar');
+      const qrLabel = document.getElementById('qrTimerLabel');
+      const qrImg = document.getElementById('qrImg');
 
+      if (qrImg) qrImg.classList.remove('opacity-40');
       if (badge) badge.classList.remove('hidden');
       if (progressContainer) progressContainer.classList.remove('hidden');
-      if (countEl) countEl.textContent = qrTimeLeft;
-      if (progressBar) progressBar.style.width = '100%';
+      if (qrLabel) {
+        qrLabel.innerHTML = `Resets in <span id="qrTimerCount" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">${qrTimeLeft}</span>s`;
+      }
+      if (progressBar) {
+        progressBar.style.width = '100%';
+        progressBar.className = 'bg-emerald-500 h-1.5 rounded-full transition-all duration-1000 ease-linear';
+      }
 
       qrTimerInterval = setInterval(() => {
         qrTimeLeft--;
-        if (countEl) {
-          countEl.textContent = Math.max(0, qrTimeLeft);
+        const count = document.getElementById('qrTimerCount');
+        if (count) {
+          count.textContent = Math.max(0, qrTimeLeft);
         }
         if (progressBar) {
           const pct = Math.max(0, (qrTimeLeft / QR_REFRESH_CYCLE_SEC) * 100);
           progressBar.style.width = `${pct}%`;
+          if (qrTimeLeft <= 5) {
+            progressBar.className = 'bg-amber-500 h-1.5 rounded-full transition-all duration-1000 ease-linear';
+          }
         }
         if (qrTimeLeft <= 0) {
           clearInterval(qrTimerInterval);
           qrTimerInterval = null;
-          if (countEl) countEl.textContent = '0';
+          // QR Expired! Automatically add new one without waiting!
+          triggerAutoQrRefresh();
         }
       }, 1000);
+    }
+
+    async function triggerAutoQrRefresh() {
+      if (isAutoRefreshingQr) return;
+      if (!authToken) return;
+
+      const qrTab = document.getElementById('qrTabContent');
+      if (qrTab && qrTab.classList.contains('hidden')) return;
+
+      isAutoRefreshingQr = true;
+      const qrLabel = document.getElementById('qrTimerLabel');
+      const progressBar = document.getElementById('qrProgressBar');
+      const qrImg = document.getElementById('qrImg');
+
+      if (progressBar) progressBar.style.width = '0%';
+      if (qrLabel) {
+        qrLabel.innerHTML = `<span class="font-bold text-amber-600 dark:text-amber-400 animate-pulse">Auto-refreshing QR...</span>`;
+      }
+      if (qrImg) {
+        qrImg.classList.add('opacity-40');
+      }
+
+      try {
+        const res = await fetch('/api/session/refresh-qr', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        if (data && data.qrDataUrl) {
+          const qrSpinner = document.getElementById('qrSpinner');
+          if (qrSpinner) qrSpinner.classList.add('hidden');
+          if (qrImg) {
+            qrImg.src = data.qrDataUrl;
+            qrImg.classList.remove('opacity-40');
+            qrImg.classList.remove('hidden');
+          }
+          lastSeenQr = data.qrDataUrl;
+          startQrCountdown(QR_REFRESH_CYCLE_SEC);
+        } else {
+          await loadStatus();
+        }
+      } catch (err) {
+        console.warn('Auto refresh QR error:', err);
+        setTimeout(() => {
+          if (!qrTimerInterval && authToken) {
+            loadStatus();
+          }
+        }, 1500);
+      } finally {
+        if (qrImg) qrImg.classList.remove('opacity-40');
+        isAutoRefreshingQr = false;
+      }
     }
 
     function stopQrCountdown() {
@@ -1820,6 +1889,7 @@
         clearInterval(qrTimerInterval);
         qrTimerInterval = null;
       }
+      isAutoRefreshingQr = false;
       const badge = document.getElementById('qrTimerBadge');
       const progressContainer = document.getElementById('qrProgressBarContainer');
       if (badge) badge.classList.add('hidden');
