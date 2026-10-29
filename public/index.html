@@ -538,18 +538,8 @@
           </div>
         </div>
 
-        <!-- Telemetry Badges & Lock -->
-        <div class="w-full md:w-auto flex flex-wrap items-center justify-between md:justify-end gap-4 text-xs pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
-          <div class="text-left md:text-right">
-            <span class="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Server Uptime</span>
-            <span id="liveUptime" class="font-mono font-bold text-slate-800 dark:text-slate-200">00:00:00</span>
-          </div>
-
-          <div class="text-left md:text-right">
-            <span class="block text-slate-400 text-[10px] uppercase font-bold tracking-wider">Memory (RAM)</span>
-            <span id="liveRam" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">34.6 MB</span>
-          </div>
-
+        <!-- Action Controls -->
+        <div class="w-full md:w-auto flex flex-wrap items-center justify-between md:justify-end gap-2 text-xs pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
           <div class="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -1953,7 +1943,8 @@
     function applyTelemetry(t) {
       uptimeSeconds = t.uptimeSeconds || uptimeSeconds;
       if (t.ramUsage) {
-        document.getElementById('liveRam').textContent = `${t.ramUsage.heapUsedMB} MB`;
+        const ramEl = document.getElementById('liveRam');
+        if (ramEl) ramEl.textContent = `${t.ramUsage.heapUsedMB} MB`;
       }
 
       if (document.getElementById('activeSessionBadge')) {
@@ -2262,8 +2253,11 @@
         const h = Math.floor(uptimeSeconds / 3600);
         const m = Math.floor((uptimeSeconds % 3600) / 60);
         const s = uptimeSeconds % 60;
-        document.getElementById('liveUptime').textContent = 
-          `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        const uptimeEl = document.getElementById('liveUptime');
+        if (uptimeEl) {
+          uptimeEl.textContent = 
+            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
       }, 1000);
     }
 
