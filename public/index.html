@@ -631,7 +631,7 @@
 
         <!-- TAB 1: QR CODE -->
         <div id="qrTabContent" class="flex flex-col items-center">
-          <div class="p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+          <div class="p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg flex flex-col items-center">
             <div id="qrSpinner" class="w-56 h-56 sm:w-64 sm:h-64 flex flex-col items-center justify-center text-slate-400 gap-2.5 text-center px-4">
               <svg class="animate-spin h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -647,9 +647,26 @@
               </button>
             </div>
             <img id="qrImg" src="" alt="WhatsApp QR" class="hidden w-56 h-56 sm:w-64 sm:h-64 object-contain rounded-xl select-none" />
+            
+            <!-- Animated Progress Bar Under QR -->
+            <div id="qrProgressBarContainer" class="hidden w-full max-w-[220px] mt-2.5 px-1">
+              <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div id="qrProgressBar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-1000 ease-linear" style="width: 100%;"></div>
+              </div>
+            </div>
           </div>
 
-          <div class="flex items-center gap-2 mt-3.5">
+          <!-- Countdown Timer Badge & Refresh Controls -->
+          <div class="flex flex-col sm:flex-row items-center gap-2 mt-3.5">
+            <!-- Active QR Reset Countdown Timer -->
+            <div id="qrTimerBadge" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shadow-sm">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Resets in <span id="qrTimerCount" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">20</span>s</span>
+            </div>
+
             <button
               type="button"
               id="refreshQrBtn"
@@ -664,7 +681,7 @@
             </button>
           </div>
 
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-3 text-center">
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-2.5 text-center">
             Open WhatsApp &rarr; <strong>Settings</strong> &rarr; <strong>Linked Devices</strong> &rarr; <strong>Link a Device</strong>
           </p>
         </div>
@@ -698,10 +715,15 @@
             <div id="codeError" class="text-xs text-rose-500 mt-2 hidden p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20"></div>
           </div>
 
-          <div id="pairingCodeBox" class="hidden p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
+          <div id="pairingCodeBox" class="hidden p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center space-y-2">
             <span class="text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">8-Digit Pairing Code</span>
             <div id="pairingCodeDisplay" class="font-mono text-3xl font-extrabold tracking-widest text-slate-900 dark:text-white py-2 select-all">
               ---- ----
+            </div>
+            <!-- Pairing Code Countdown Timer -->
+            <div id="pairingTimerBadge" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span>Code expires in <span id="pairingTimerCount" class="font-mono font-bold">02:00</span></span>
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400">
               In WhatsApp &rarr; <strong>Linked Devices</strong> &rarr; <strong>Link with phone number instead</strong> &rarr; enter this code.
@@ -1632,6 +1654,8 @@
     function showLockedHero() {
       if (heartbeatIntervalTimer) clearInterval(heartbeatIntervalTimer);
       stopStatusPolling();
+      stopQrCountdown();
+      stopPairingCountdown();
       document.getElementById('heroLockCard').classList.remove('hidden');
       document.getElementById('unlockedConsole').classList.add('hidden');
       const navText = document.getElementById('navActionBtnText');
@@ -1738,6 +1762,8 @@
           const img = document.getElementById('qrImg');
           img.src = data.qrDataUrl;
           img.classList.remove('hidden');
+          lastSeenQr = data.qrDataUrl;
+          startQrCountdown(20);
           showNotification('✅ Fresh QR Code Ready to Scan!');
         } else {
           showNotification('Initializing connection to WhatsApp... please wait 2 seconds.');
@@ -1751,6 +1777,93 @@
         if (btn) btn.disabled = false;
         if (icon) icon.classList.remove('animate-spin');
       }
+    }
+
+    // QR and Pairing Code Countdown Timers
+    let qrTimerInterval = null;
+    let qrTimeLeft = 20;
+    const QR_REFRESH_CYCLE_SEC = 20;
+    let lastSeenQr = null;
+
+    function startQrCountdown(seconds = QR_REFRESH_CYCLE_SEC) {
+      stopQrCountdown();
+      qrTimeLeft = seconds;
+      const badge = document.getElementById('qrTimerBadge');
+      const countEl = document.getElementById('qrTimerCount');
+      const progressContainer = document.getElementById('qrProgressBarContainer');
+      const progressBar = document.getElementById('qrProgressBar');
+
+      if (badge) badge.classList.remove('hidden');
+      if (progressContainer) progressContainer.classList.remove('hidden');
+      if (countEl) countEl.textContent = qrTimeLeft;
+      if (progressBar) progressBar.style.width = '100%';
+
+      qrTimerInterval = setInterval(() => {
+        qrTimeLeft--;
+        if (countEl) {
+          countEl.textContent = Math.max(0, qrTimeLeft);
+        }
+        if (progressBar) {
+          const pct = Math.max(0, (qrTimeLeft / QR_REFRESH_CYCLE_SEC) * 100);
+          progressBar.style.width = `${pct}%`;
+        }
+        if (qrTimeLeft <= 0) {
+          clearInterval(qrTimerInterval);
+          qrTimerInterval = null;
+          if (countEl) countEl.textContent = '0';
+        }
+      }, 1000);
+    }
+
+    function stopQrCountdown() {
+      if (qrTimerInterval) {
+        clearInterval(qrTimerInterval);
+        qrTimerInterval = null;
+      }
+      const badge = document.getElementById('qrTimerBadge');
+      const progressContainer = document.getElementById('qrProgressBarContainer');
+      if (badge) badge.classList.add('hidden');
+      if (progressContainer) progressContainer.classList.add('hidden');
+    }
+
+    let pairingTimerInterval = null;
+    let pairingTimeLeft = 120;
+
+    function startPairingCountdown(seconds = 120) {
+      stopPairingCountdown();
+      pairingTimeLeft = seconds;
+      const badge = document.getElementById('pairingTimerBadge');
+      const countEl = document.getElementById('pairingTimerCount');
+      if (badge) badge.classList.remove('hidden');
+
+      const updateDisplay = () => {
+        if (!countEl) return;
+        const mins = Math.floor(pairingTimeLeft / 60);
+        const secs = pairingTimeLeft % 60;
+        countEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      };
+
+      updateDisplay();
+
+      pairingTimerInterval = setInterval(() => {
+        pairingTimeLeft--;
+        if (pairingTimeLeft <= 0) {
+          clearInterval(pairingTimerInterval);
+          pairingTimerInterval = null;
+          if (countEl) countEl.textContent = 'Expired';
+        } else {
+          updateDisplay();
+        }
+      }, 1000);
+    }
+
+    function stopPairingCountdown() {
+      if (pairingTimerInterval) {
+        clearInterval(pairingTimerInterval);
+        pairingTimerInterval = null;
+      }
+      const badge = document.getElementById('pairingTimerBadge');
+      if (badge) badge.classList.add('hidden');
     }
 
     function applyTelemetry(t) {
@@ -1777,6 +1890,8 @@
 
       if (isConnected) {
         stopStatusPolling();
+        stopQrCountdown();
+        stopPairingCountdown();
         dot.className = 'w-3.5 h-3.5 rounded-full bg-emerald-500';
         label.textContent = 'WhatsApp Active 24/7';
         pairingSection.classList.add('hidden');
@@ -1846,16 +1961,22 @@
         }
       }
 
-      // QR Image Handling
+      // QR Image Handling & Countdown Trigger
       const qrSpinner = document.getElementById('qrSpinner');
       const qrImg = document.getElementById('qrImg');
       if (t.qrDataUrl) {
         qrSpinner.classList.add('hidden');
+        if (lastSeenQr !== t.qrDataUrl) {
+          lastSeenQr = t.qrDataUrl;
+          startQrCountdown(QR_REFRESH_CYCLE_SEC);
+        }
         qrImg.src = t.qrDataUrl;
         qrImg.classList.remove('hidden');
       } else {
+        lastSeenQr = null;
         qrImg.classList.add('hidden');
         qrSpinner.classList.remove('hidden');
+        stopQrCountdown();
       }
 
       // Pairing Code
@@ -1875,6 +1996,9 @@
         codeBtn.className = 'px-5 py-2 rounded-full text-xs font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
         qrContent.classList.remove('hidden');
         codeContent.classList.add('hidden');
+        if (lastSeenQr) {
+          startQrCountdown(qrTimeLeft > 0 ? qrTimeLeft : 20);
+        }
       } else {
         codeBtn.className = 'px-5 py-2 rounded-full text-xs font-semibold transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm';
         qrBtn.className = 'px-5 py-2 rounded-full text-xs font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
@@ -1941,6 +2065,7 @@
       const display = document.getElementById('pairingCodeDisplay');
       box.classList.remove('hidden');
       display.textContent = code.length === 8 ? `${code.slice(0, 4)} - ${code.slice(4)}` : code;
+      startPairingCountdown(120);
     }
 
     // Gateway Keep-Alive Activity Logger (Zero Data Collection)
