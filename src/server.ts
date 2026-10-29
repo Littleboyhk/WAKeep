@@ -556,6 +556,14 @@ app.get('/api/session/status', requirePinAuth, async (req: AuthenticatedRequest,
   try {
     const targetSessionId = req.sessionId!;
     const manager = await sessionManager.getOrLoadSession(targetSessionId);
+
+    // Auto-wake QR code engine if companion is not linked and QR is missing
+    if (manager.getStatus() !== 'connected' && !manager.getQrCode()) {
+      manager.ensureQrReady().catch((err) => {
+        console.warn(`[Server] ensureQrReady notice for [${targetSessionId}]:`, err.message);
+      });
+    }
+
     const telemetry = manager.getTelemetry();
     const isAccountActive = telemetry.status === 'connected' && Boolean(telemetry.user);
 
@@ -569,6 +577,22 @@ app.get('/api/session/status', requirePinAuth, async (req: AuthenticatedRequest,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to fetch session status.' });
+  }
+});
+
+app.post('/api/session/refresh-qr', requirePinAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const targetSessionId = req.sessionId!;
+    const manager = await sessionManager.getOrLoadSession(targetSessionId);
+    const qrDataUrl = await manager.refreshQr();
+    res.json({
+      success: true,
+      status: manager.getStatus(),
+      qrDataUrl,
+      message: qrDataUrl ? 'Fresh QR code generated successfully.' : 'QR engine initialized. Generating fresh QR code...'
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to refresh QR code.' });
   }
 });
 

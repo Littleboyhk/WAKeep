@@ -1,6 +1,7 @@
 import { Boom } from '@hapi/boom';
 import { SupabaseClient } from '@supabase/supabase-js';
 import makeWASocket, {
+  Browsers,
   ConnectionState,
   DisconnectReason,
   fetchLatestBaileysVersion,
@@ -143,11 +144,11 @@ export class WhatsAppClientManager {
 
       // Fetch the latest Baileys version dynamically for best compatibility
       const { version, isLatest } = await fetchLatestBaileysVersion().catch(() => ({
-        version: [2, 3000, 1015901307] as [number, number, number],
+        version: [2, 3000, 1043857760] as [number, number, number],
         isLatest: true
       }));
 
-      console.log(`[WhatsAppClient] Starting socket with Baileys v${version.join('.')} (latest: ${isLatest})`);
+      console.log(`[WhatsAppClient] Starting socket for [${this.sessionId}] with Baileys v${version.join('.')} (latest: ${isLatest})`);
 
       // Create socket with anti-disconnect, low-RAM, and desktop spoofing options
       this.sock = makeWASocket({
@@ -155,8 +156,8 @@ export class WhatsAppClientManager {
         auth: this.authStateResult.state,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false,
-        // Desktop fingerprint signature: Ubuntu Chrome
-        browser: ['Ubuntu', 'Chrome', '128.0.6613.119'],
+        // Official Baileys Ubuntu Chrome companion signature
+        browser: Browsers.ubuntu('Chrome'),
         // Keep primary phone active without trigger notifications
         markOnlineOnConnect: false,
         // NAT keep-alive interval: 25 seconds
@@ -205,7 +206,8 @@ export class WhatsAppClientManager {
             }
           });
           this.status = 'waiting_qr';
-          console.log('[WhatsAppClient] New QR code generated');
+          this.reconnectAttempts = 0;
+          console.log(`[WhatsAppClient] New QR code generated successfully for [${this.sessionId}]`);
           this.broadcastStatus();
         } catch (qrErr: any) {
           console.error('[WhatsAppClient] Error generating QR DataURL:', qrErr.message);
@@ -226,7 +228,7 @@ export class WhatsAppClientManager {
           (lastDisconnect?.error as any)?.statusCode;
         const reason = DisconnectReason[statusCode] || `Code ${statusCode}`;
 
-        console.log(`[WhatsAppClient] Connection closed. Reason: ${reason} (${statusCode})`);
+        console.log(`[WhatsAppClient] Connection closed for [${this.sessionId}]. Reason: ${reason} (${statusCode})`);
 
         this.currentQrDataUrl = null;
 
@@ -236,33 +238,121 @@ export class WhatsAppClientManager {
           return;
         }
 
+        // When QR times out or session is unlinked/logged out (401), clean up stale creds
+        // and immediately restart Baileys with fresh state so a fresh QR code is always emitted!
         if (statusCode === DisconnectReason.loggedOut) {
-          this.status = 'logged_out';
-          console.warn('[WhatsAppClient] Session was logged out by WhatsApp. Requires new QR/pairing.');
+          console.warn(`[WhatsAppClient] Session [${this.sessionId}] logged out or QR timed out. Resetting auth state for fresh QR...`);
+          this.status = 'waiting_qr';
           this.broadcastStatus();
-        } else {
-          this.status = 'reconnecting';
-          this.broadcastStatus();
-          this.scheduleReconnect();
+
+          if (this.authStateResult) {
+            this.authStateResult.clearVault().catch((clearErr: any) => {
+              console.warn('[WhatsAppClient] Non-fatal vault clear notice:', clearErr.message);
+            });
+          }
+
+          // Restart cleanly in 1.5 seconds to regenerate fresh QR code immediately
+          this.scheduleReconnect(1500);
+          return;
         }
+
+        this.status = 'reconnecting';
+        this.broadcastStatus();
+        this.scheduleReconnect();
       }
     });
   }
 
-  private scheduleReconnect(): void {
+  private scheduleReconnect(delayMs?: number): void {
     if (this.reconnectTimer) return;
 
     this.reconnectAttempts += 1;
-    // Exponential backoff capped at 30 seconds
-    const delay = Math.min(2000 * Math.pow(1.4, this.reconnectAttempts), 30000);
-    console.log(`[WhatsAppClient] Reconnecting in ${(delay / 1000).toFixed(1)}s (attempt ${this.reconnectAttempts})...`);
+    // Exponential backoff capped at 25 seconds unless explicitly specified
+    const delay = delayMs !== undefined ? delayMs : Math.min(1500 * Math.pow(1.3, this.reconnectAttempts), 25000);
+    console.log(`[WhatsAppClient] Reconnecting [${this.sessionId}] in ${(delay / 1000).toFixed(1)}s (attempt ${this.reconnectAttempts})...`);
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.init().catch((err) => {
-        console.error('[WhatsAppClient] Auto-reconnect failed:', err);
+        console.error(`[WhatsAppClient] Auto-reconnect failed for [${this.sessionId}]:`, err.message);
       });
     }, delay);
+  }
+
+  /**
+   * Ensures that a fresh, active QR code is currently being generated.
+   * If the socket connection closed or entered an idle/logged_out state, re-inits cleanly.
+   */
+  public async ensureQrReady(): Promise<string | null> {
+    if (this.status === 'connected') return null;
+    if (this.currentQrDataUrl) return this.currentQrDataUrl;
+
+    if (!this.sock || this.status === 'logged_out' || this.status === 'idle' || this.status === 'error') {
+      console.log(`[WhatsAppClient] ensureQrReady: Initializing clean socket for [${this.sessionId}]...`);
+      if (this.authStateResult) {
+        await this.authStateResult.clearVault().catch(() => {});
+      }
+      await this.init();
+    }
+
+    return this.currentQrDataUrl;
+  }
+
+  /**
+   * Forcibly regenerates a fresh QR code:
+   * Cleans up stale unauthenticated socket, purges vault, and returns fresh QR.
+   */
+  public async refreshQr(): Promise<string | null> {
+    if (this.status === 'connected') {
+      throw new Error('WhatsApp companion is already connected and active. To link a different account, log out first.');
+    }
+
+    console.log(`[WhatsAppClient] Force refreshing QR code for session [${this.sessionId}]...`);
+    this.isExplicitDisconnect = true;
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    if (this.sock) {
+      this.sock.ev.removeAllListeners('connection.update');
+      this.sock.ev.removeAllListeners('creds.update');
+      try {
+        this.sock.end(undefined);
+      } catch {}
+      this.sock = null;
+    }
+
+    if (this.authStateResult) {
+      await this.authStateResult.clearVault().catch(() => {});
+    }
+
+    this.currentQrDataUrl = null;
+    this.lastPairingCode = null;
+    this.reconnectAttempts = 0;
+    this.status = 'connecting';
+    this.broadcastStatus();
+
+    await this.init();
+
+    // Poll up to 6 seconds for the first QR event from WhatsApp
+    return new Promise((resolve) => {
+      if (this.currentQrDataUrl) return resolve(this.currentQrDataUrl);
+
+      const checkInterval = setInterval(() => {
+        if (this.currentQrDataUrl || this.status === 'connected') {
+          clearInterval(checkInterval);
+          clearTimeout(timeoutTimer);
+          resolve(this.currentQrDataUrl);
+        }
+      }, 250);
+
+      const timeoutTimer = setTimeout(() => {
+        clearInterval(checkInterval);
+        resolve(this.currentQrDataUrl);
+      }, 6000);
+    });
   }
 
   /**
