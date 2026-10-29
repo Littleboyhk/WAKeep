@@ -1634,18 +1634,32 @@
 
     function startStatusPolling() {
       if (statusPollTimer) return;
-      // Active 3-second fallback polling while waiting for WhatsApp QR or connection
-      statusPollTimer = setInterval(async () => {
-        if (authToken) {
-          await loadStatus();
-        } else {
+      let isPolling = false;
+      const poll = async () => {
+        if (!authToken) {
           stopStatusPolling();
+          return;
         }
-      }, 3000);
+        if (!isPolling) {
+          isPolling = true;
+          try {
+            await loadStatus();
+          } finally {
+            isPolling = false;
+          }
+        }
+        if (statusPollTimer !== null) {
+          // Fast 1.5s polling while QR is missing, smooth 3s once QR is visible
+          const nextDelay = lastSeenQr ? 3000 : 1500;
+          statusPollTimer = setTimeout(poll, nextDelay);
+        }
+      };
+      statusPollTimer = setTimeout(poll, 300);
     }
 
     function stopStatusPolling() {
       if (statusPollTimer) {
+        clearTimeout(statusPollTimer);
         clearInterval(statusPollTimer);
         statusPollTimer = null;
       }

@@ -558,9 +558,11 @@ app.get('/api/session/status', requirePinAuth, async (req: AuthenticatedRequest,
     const manager = await sessionManager.getOrLoadSession(targetSessionId);
 
     // Auto-wake QR code engine if companion is not linked and QR is missing
-    if (manager.getStatus() !== 'connected' && !manager.getQrCode()) {
-      manager.ensureQrReady().catch((err) => {
+    let qrDataUrl = manager.getQrCode();
+    if (manager.getStatus() !== 'connected' && !qrDataUrl) {
+      qrDataUrl = await manager.ensureQrReady(2500).catch((err) => {
         console.warn(`[Server] ensureQrReady notice for [${targetSessionId}]:`, err.message);
+        return null;
       });
     }
 
@@ -570,7 +572,7 @@ app.get('/api/session/status', requirePinAuth, async (req: AuthenticatedRequest,
     res.json({
       ...telemetry,
       sessionId: targetSessionId,
-      qrDataUrl: manager.getQrCode(),
+      qrDataUrl: qrDataUrl || manager.getQrCode(),
       pairingCode: manager.getLastPairingCode(),
       vaultConnected: Boolean(SUPABASE_URL && SUPABASE_KEY),
       isAccountActive

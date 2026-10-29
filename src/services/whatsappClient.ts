@@ -23,6 +23,24 @@ export type SessionConnectionStatus =
   | 'logged_out'
   | 'error';
 
+// Cached Baileys version to avoid blocking WhatsApp socket startup
+let cachedBaileysVersion: [number, number, number] | null = null;
+
+async function getFastBaileysVersion(): Promise<[number, number, number]> {
+  if (cachedBaileysVersion) return cachedBaileysVersion;
+  try {
+    const fetchPromise = fetchLatestBaileysVersion().then((r) => r.version);
+    const timeoutPromise = new Promise<[number, number, number]>((_, reject) =>
+      setTimeout(() => reject(new Error('Version fetch timeout')), 1200)
+    );
+    cachedBaileysVersion = await Promise.race([fetchPromise, timeoutPromise]);
+    return cachedBaileysVersion;
+  } catch {
+    cachedBaileysVersion = [2, 3000, 1043857760];
+    return cachedBaileysVersion;
+  }
+}
+
 export interface WhatsAppClientOptions {
   supabase: SupabaseClient;
   vaultSecret: string;
@@ -142,13 +160,10 @@ export class WhatsAppClientManager {
         this.sessionId
       );
 
-      // Fetch the latest Baileys version dynamically for best compatibility
-      const { version, isLatest } = await fetchLatestBaileysVersion().catch(() => ({
-        version: [2, 3000, 1043857760] as [number, number, number],
-        isLatest: true
-      }));
+      // Instant Baileys version (cached with 1.2s timeout, never hangs)
+      const version = await getFastBaileysVersion();
 
-      console.log(`[WhatsAppClient] Starting socket for [${this.sessionId}] with Baileys v${version.join('.')} (latest: ${isLatest})`);
+      console.log(`[WhatsAppClient] Starting fast socket for [${this.sessionId}] with Baileys v${version.join('.')}`);
 
       // Create socket with anti-disconnect, low-RAM, and desktop spoofing options
       this.sock = makeWASocket({
@@ -162,6 +177,9 @@ export class WhatsAppClientManager {
         markOnlineOnConnect: false,
         // NAT keep-alive interval: 25 seconds
         keepAliveIntervalMs: 25000,
+        connectTimeoutMs: 20000,
+        defaultQueryTimeoutMs: 20000,
+        qrTimeout: 40000,
         // Minimize RAM consumption to stay under free tier 70MB limits
         syncFullHistory: false,
         generateHighQualityLinkPreview: false,
@@ -286,29 +304,36 @@ export class WhatsAppClientManager {
   }
 
   /**
-   * Ensures that a fresh, active QR code is currently being generated.
-   * If the socket connection closed or entered an idle/logged_out state, re-inits cleanly.
+   * Ensures that a fresh, active QR code is currently ready or generated.
+   * Actively waits up to maxWaitMs (3s) and resolves as soon as WhatsApp emits the QR!
    */
-  public async ensureQrReady(): Promise<string | null> {
+  public async ensureQrReady(maxWaitMs = 3000): Promise<string | null> {
     if (this.status === 'connected') return null;
     if (this.currentQrDataUrl) return this.currentQrDataUrl;
 
     if (!this.sock || this.status === 'logged_out' || this.status === 'idle' || this.status === 'error') {
       console.log(`[WhatsAppClient] ensureQrReady: Initializing clean socket for [${this.sessionId}]...`);
-      if (this.authStateResult) {
-        await this.authStateResult.clearVault().catch(() => {});
-      }
       await this.init();
     }
 
-    return this.currentQrDataUrl;
+    if (this.currentQrDataUrl) return this.currentQrDataUrl;
+
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      const checkInterval = setInterval(() => {
+        if (this.currentQrDataUrl || this.status === 'connected' || (Date.now() - startTime) >= maxWaitMs) {
+          clearInterval(checkInterval);
+          resolve(this.currentQrDataUrl);
+        }
+      }, 100);
+    });
   }
 
   /**
    * Forcibly regenerates a fresh QR code:
    * Cleans up stale unauthenticated socket, purges vault, and returns fresh QR.
    */
-  public async refreshQr(): Promise<string | null> {
+  public async refreshQr(maxWaitMs = 5000): Promise<string | null> {
     if (this.status === 'connected') {
       throw new Error('WhatsApp companion is already connected and active. To link a different account, log out first.');
     }
@@ -342,22 +367,17 @@ export class WhatsAppClientManager {
 
     await this.init();
 
-    // Poll up to 6 seconds for the first QR event from WhatsApp
+    // Fast active check every 100ms for immediate response
     return new Promise((resolve) => {
       if (this.currentQrDataUrl) return resolve(this.currentQrDataUrl);
 
+      const startTime = Date.now();
       const checkInterval = setInterval(() => {
-        if (this.currentQrDataUrl || this.status === 'connected') {
+        if (this.currentQrDataUrl || this.status === 'connected' || (Date.now() - startTime) >= maxWaitMs) {
           clearInterval(checkInterval);
-          clearTimeout(timeoutTimer);
           resolve(this.currentQrDataUrl);
         }
-      }, 250);
-
-      const timeoutTimer = setTimeout(() => {
-        clearInterval(checkInterval);
-        resolve(this.currentQrDataUrl);
-      }, 6000);
+      }, 100);
     });
   }
 
